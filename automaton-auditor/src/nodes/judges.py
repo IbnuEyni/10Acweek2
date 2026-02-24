@@ -87,27 +87,31 @@ def evaluate_criterion(
     )
     
     try:
-        # Use structured output
-        structured_llm = llm.with_structured_output(
-            {
-                "type": "object",
-                "properties": {
-                    "score": {"type": "integer", "minimum": 1, "maximum": 5},
-                    "argument": {"type": "string"},
-                    "cited_evidence": {"type": "array", "items": {"type": "string"}}
-                },
-                "required": ["score", "argument", "cited_evidence"]
-            }
-        )
+        # Simple text generation with JSON parsing
+        response = llm.invoke(prompt)
+        content = response.content if hasattr(response, 'content') else str(response)
         
-        response = structured_llm.invoke(prompt)
+        # Parse JSON from response
+        import json
+        import re
+        
+        # Extract JSON from markdown code blocks if present
+        json_match = re.search(r'```(?:json)?\s*({.*?})\s*```', content, re.DOTALL)
+        if json_match:
+            json_str = json_match.group(1)
+        else:
+            # Try to find JSON object directly
+            json_match = re.search(r'{.*}', content, re.DOTALL)
+            json_str = json_match.group(0) if json_match else content
+        
+        data = json.loads(json_str)
         
         return JudicialOpinion(
             judge=judge_name,
             criterion_id=criterion.id,
-            score=response["score"],
-            argument=response["argument"],
-            cited_evidence=response.get("cited_evidence", [])
+            score=int(data.get("score", 3)),
+            argument=data.get("argument", content[:200]),
+            cited_evidence=data.get("cited_evidence", [])
         )
     except Exception as e:
         # Fallback opinion on error

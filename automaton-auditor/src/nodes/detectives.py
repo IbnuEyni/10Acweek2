@@ -184,19 +184,72 @@ def doc_analyst_node(state: AgentState) -> AgentState:
 
 def vision_inspector_node(state: AgentState) -> AgentState:
     """
-    VisionInspector: Diagram Detective (Optional).
-    Extracts and analyzes architectural diagrams.
+    VisionInspector: Diagram Detective.
+    Extracts and analyzes architectural diagrams using Gemini.
     """
-    # Placeholder for Phase 2 - can be implemented later
-    evidences = {
-        "diagram_analysis": [Evidence(
+    from src.tools.vision_tools import extract_images_from_pdf, analyze_diagram_with_gemini
+    from src.utils.config import Config
+    
+    pdf_path = Path(state["pdf_path"])
+    evidences = {}
+    
+    if not Config.GOOGLE_API_KEY or Config.GOOGLE_API_KEY == "YOUR_GOOGLE_API_KEY_HERE":
+        evidences["diagram_analysis"] = [Evidence(
             goal="Analyze architectural diagrams",
             found=False,
-            content="Vision inspection not yet implemented",
+            content="Google API key not configured",
             location="N/A",
-            rationale="Optional feature for future enhancement",
+            rationale="Vision inspection requires GOOGLE_API_KEY in .env",
             confidence=0.0
         )]
-    }
+        return {"evidences": evidences}
+    
+    try:
+        image_paths = extract_images_from_pdf(pdf_path)
+        
+        if not image_paths:
+            evidences["diagram_analysis"] = [Evidence(
+                goal="Analyze architectural diagrams",
+                found=False,
+                content="No images extracted from PDF",
+                location=str(pdf_path),
+                rationale="PDF contains no diagrams or extraction failed",
+                confidence=0.8
+            )]
+            return {"evidences": evidences}
+        
+        diagram_findings = []
+        for img_path in image_paths[:3]:
+            analysis = analyze_diagram_with_gemini(img_path, Config.GOOGLE_API_KEY)
+            if "error" not in analysis:
+                diagram_findings.append(analysis)
+        
+        has_state_graph = any(
+            "StateGraph" in d.get("diagram_type", "") 
+            for d in diagram_findings
+        )
+        has_parallel = any(
+            d.get("has_parallel_execution", False) 
+            for d in diagram_findings
+        )
+        
+        evidences["diagram_analysis"] = [Evidence(
+            goal="Verify architectural diagram shows parallel execution",
+            found=has_state_graph and has_parallel,
+            content=f"Analyzed {len(diagram_findings)} diagrams. Findings: {diagram_findings}",
+            location=str(pdf_path),
+            rationale=f"StateGraph: {has_state_graph}, Parallel: {has_parallel}",
+            confidence=0.7 if diagram_findings else 0.1
+        )]
+        
+    except Exception as e:
+        evidences["diagram_analysis"] = [Evidence(
+            goal="Analyze architectural diagrams",
+            found=False,
+            content=str(e),
+            location=str(pdf_path),
+            rationale=f"Vision analysis failed: {e}",
+            confidence=0.0
+        )]
     
     return {"evidences": evidences}
