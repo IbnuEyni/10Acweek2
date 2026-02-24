@@ -1,0 +1,39 @@
+# Environment
+.env
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temp directories for cloned repos
+/tmp_*
+/audit_*
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# Test artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Audit outputs (keep structure, ignore content)
+audit/report_bypeer_received/*
+audit/report_onpeer_generated/*
+audit/report_onself_generated/*
+audit/langsmith_logs/*
+!audit/**/.gitkeep
