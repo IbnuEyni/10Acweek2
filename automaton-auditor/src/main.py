@@ -45,11 +45,15 @@ def main():
     rubric = load_rubric()
     print(f"   ✅ Loaded {len(rubric['dimensions'])} evaluation criteria\n")
     
+    # Convert to RubricDimension objects
+    from src.state import RubricDimension
+    dimensions = [RubricDimension(**d) for d in rubric["dimensions"]]
+    
     # Initialize state
     initial_state: AgentState = {
         "repo_url": args.repo_url,
         "pdf_path": args.pdf_path,
-        "rubric_dimensions": rubric["dimensions"],
+        "rubric_dimensions": dimensions,
         "evidences": {},
         "opinions": [],
         "final_report": "",
