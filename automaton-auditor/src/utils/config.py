@@ -19,9 +19,13 @@ if langsmith_key := os.getenv("LANGSMITH_API_KEY"):
 class Config:
     """Central configuration for the auditor system."""
     
-    # API Keys
+    # API Keys (Multiple providers supported)
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
     ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+    GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+    GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+    TOGETHER_API_KEY = os.getenv("TOGETHER_API_KEY")
+    OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     
     # Model Configuration
     DEFAULT_LLM_MODEL = os.getenv("DEFAULT_LLM_MODEL", "gpt-4o")
@@ -39,8 +43,25 @@ class Config:
     @classmethod
     def validate(cls):
         """Validate required configuration."""
-        if not cls.OPENAI_API_KEY and not cls.ANTHROPIC_API_KEY:
-            raise ValueError("At least one LLM API key required (OPENAI_API_KEY or ANTHROPIC_API_KEY)")
+        has_api_key = any([
+            cls.OPENAI_API_KEY,
+            cls.ANTHROPIC_API_KEY,
+            cls.GROQ_API_KEY,
+            cls.GOOGLE_API_KEY,
+            cls.TOGETHER_API_KEY,
+            cls.OLLAMA_BASE_URL
+        ])
+        
+        if not has_api_key:
+            raise ValueError(
+                "At least one LLM provider required:\n"
+                "  - OPENAI_API_KEY\n"
+                "  - ANTHROPIC_API_KEY\n"
+                "  - GROQ_API_KEY (recommended - fast & free)\n"
+                "  - GOOGLE_API_KEY\n"
+                "  - TOGETHER_API_KEY\n"
+                "  - OLLAMA_BASE_URL (local)"
+            )
         
         if not cls.RUBRIC_PATH.exists():
             raise FileNotFoundError(f"Rubric not found at {cls.RUBRIC_PATH}")
