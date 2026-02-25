@@ -110,16 +110,23 @@ def extract_architectural_keywords(text: str) -> Dict[str, int]:
         Dict with keyword counts
     """
     keywords = [
-        "Dialectical Synthesis",
-        "Metacognition",
-        "Fan-Out",
-        "Fan-In",
-        "State Synchronization",
         "Parallel Execution",
+        "State Synchronization",
         "Pydantic",
         "StateGraph",
         "LangGraph",
-        "Multi-Agent"
+        "Multi-Agent",
+        "Fan-Out",
+        "Fan-In",
+        "CRDT",
+        "Reducer",
+        "Concurrent",
+        "Deterministic",
+        "Commutative",
+        "Idempotent",
+        "Type Safety",
+        "Graph Compilation",
+        "Node Orchestration"
     ]
     
     counts = {}

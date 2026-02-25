@@ -45,7 +45,7 @@ Each agent (detective or judge) operates independently with specialized knowledg
 The fan-out/fan-in architecture enables concurrent agent operation. Three detectives collect evidence simultaneously, followed by three judges evaluating in parallel. This reduces audit time from ~120s (sequential) to ~45s (parallel).
 
 #### 3. State Synchronization
-Reducers (`operator.ior` for dicts, `operator.add` for lists) implement conflict-free replicated data types (CRDTs). When multiple agents update shared state concurrently, reducers merge changes deterministically without data loss.
+Reducers (`operator.ior` for dicts, `operator.add` for lists) implement **conflict-free replicated data types (CRDTs)**. When multiple agents update shared state concurrently, reducers merge changes deterministically without data loss. This ensures **commutative** and **idempotent** operations for parallel safety.
 
 #### 4. Dialectical Reasoning
 The Prosecutor-Defense-TechLead triad implements adversarial collaboration. Opposing viewpoints (harsh vs generous) force comprehensive evaluation, while the pragmatic TechLead provides grounded assessment. This mirrors real code review dynamics.

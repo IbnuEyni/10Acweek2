@@ -67,13 +67,16 @@ def repo_investigator_node(state: AgentState) -> AgentState:
         
         if graph_files:
             patterns = detect_langgraph_patterns(graph_files[0])
+            node_count = len(patterns.get('node_names', []))
+            has_parallel = node_count >= 3 and patterns.get("has_add_edge", False)
+            
             evidences["langgraph_orchestration"] = [Evidence(
                 goal="Verify StateGraph with parallel execution",
-                found=patterns.get("has_state_graph", False),
-                content=f"Nodes: {patterns.get('node_names', [])}",
+                found=patterns.get("has_state_graph", False) and has_parallel,
+                content=f"StateGraph detected with {node_count} nodes: {patterns.get('node_names', [])}. Parallel branches: {patterns.get('parallel_branches', 0)}",
                 location=str(graph_files[0]),
-                rationale=f"StateGraph with {patterns.get('parallel_branches', 0)} branches",
-                confidence=0.8 if patterns.get("has_add_edge") else 0.4
+                rationale=f"StateGraph with {node_count} nodes and parallel execution" if has_parallel else f"StateGraph found but limited parallelism",
+                confidence=0.95 if has_parallel else 0.6
             )]
         else:
             evidences["langgraph_orchestration"] = [Evidence(

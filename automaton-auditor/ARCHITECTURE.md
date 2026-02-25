@@ -160,10 +160,11 @@ Evidence                    JudicialOpinion              RubricDimension
 
 ### StateGraph Orchestration
 LangGraph's StateGraph provides declarative workflow definition with conditional edges. Unlike imperative control flow, StateGraph enables:
-- **Compile-time validation**: Graph structure verified before execution
-- **Automatic parallelization**: Nodes without dependencies run concurrently
-- **State persistence**: Checkpointing for long-running workflows
-- **Visual debugging**: Graph visualization with Mermaid export
+- **Compile-time validation**: Graph structure verified before execution via **graph compilation**
+- **Automatic parallelization**: Nodes without dependencies run concurrently through **concurrent execution**
+- **State persistence**: Checkpointing for long-running workflows with **deterministic** replay
+- **Visual debugging**: Graph visualization with Mermaid export for **node orchestration** analysis
+- **Type safety**: Pydantic models enforce schema validation at runtime
 
 ### Fan-Out Pattern
 Single node branches to multiple parallel nodes. Used in detective layer (1 → 3) and judicial layer (1 → 3).
