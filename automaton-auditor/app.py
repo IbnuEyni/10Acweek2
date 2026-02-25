@@ -25,15 +25,42 @@ st.markdown("---")
 # Sidebar
 with st.sidebar:
     st.header("⚙️ Configuration")
+    
+    # LLM Provider Selection
+    st.markdown("### LLM Provider")
+    provider = st.selectbox(
+        "Choose Provider",
+        ["groq", "deepseek", "openai", "anthropic"],
+        index=0,
+        help="Select which LLM provider to use for judge evaluations"
+    )
+    
+    # Update config based on selection
+    Config.LLM_PROVIDER = provider
+    
+    # Show provider info
+    provider_info = {
+        "groq": "🚀 Fast & Free (100K tokens/day limit)",
+        "deepseek": "💰 Cheap & Unlimited ($0.02/audit)",
+        "openai": "🔥 Premium ($0.50/audit)",
+        "anthropic": "🧠 Advanced ($0.40/audit)"
+    }
+    st.info(provider_info.get(provider, "Selected provider"))
+    
+    st.markdown("---")
     st.markdown("### System Status")
     
     # Check API keys
     from src.utils.config import Config
     
     groq_status = "✅" if Config.GROQ_API_KEY else "❌"
+    deepseek_status = "✅" if Config.DEEPSEEK_API_KEY else "❌"
     google_status = "✅" if Config.GOOGLE_API_KEY else "❌"
+    openai_status = "✅" if Config.OPENAI_API_KEY else "❌"
     
     st.markdown(f"**Groq API**: {groq_status}")
+    st.markdown(f"**DeepSeek API**: {deepseek_status}")
+    st.markdown(f"**OpenAI API**: {openai_status}")
     st.markdown(f"**Google API**: {google_status}")
     
     st.markdown("---")
