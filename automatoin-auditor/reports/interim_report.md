@@ -14,21 +14,22 @@ The Automaton Auditor is an enterprise-grade multi-agent system that autonomousl
 
 ### Key Achievements
 
-- ✅ **Complete Implementation**: All 4 phases operational
+- ✅ **Detective Layer Complete**: All forensic tools operational
+- ⚠️ **Judicial Layer Functional**: Works but needs refinement (see gaps below)
 - ✅ **Parallel Execution**: Fan-out/fan-in architecture with LangGraph
 - ✅ **Multi-LLM Strategy**: Groq (judges) + Gemini (vision)
-- ✅ **Production-Grade**: Type-safe, observable, error-resilient
+- ✅ **Production-Grade Infrastructure**: Type-safe, observable, error-resilient
 - ✅ **Test Coverage**: Integration tests passing (6/6 checks)
 
 ### System Capabilities
 
-| Component           | Status      | Technology               |
-| ------------------- | ----------- | ------------------------ |
-| Detective Layer     | ✅ Complete | Git, AST, PDF, Vision AI |
-| Judicial Layer      | ✅ Complete | Groq Llama 3.3 70B       |
-| Chief Justice       | ✅ Complete | Deterministic Python     |
-| Graph Orchestration | ✅ Complete | LangGraph StateGraph     |
-| Observability       | ✅ Complete | LangSmith Tracing        |
+| Component           | Status                  | Technology               | Notes                            |
+| ------------------- | ----------------------- | ------------------------ | -------------------------------- |
+| Detective Layer     | ✅ Complete             | Git, AST, PDF, Vision AI | Solid forensic foundation        |
+| Judicial Layer      | ⚠️ Needs Refinement     | Groq Llama 3.3 70B       | Works but lacks rubric awareness |
+| Chief Justice       | ⚠️ Naive Implementation | Deterministic Python     | Simple averaging, no explanation |
+| Graph Orchestration | ✅ Complete             | LangGraph StateGraph     | Parallel execution working       |
+| Observability       | ✅ Complete             | LangSmith Tracing        | Full trace visibility            |
 
 ---
 
@@ -327,7 +328,7 @@ Each rubric criterion is evaluated by three judges with distinct philosophies:
 
 ## Implementation Status
 
-### ✅ Completed Components
+### ✅ Completed Components (Detective Layer)
 
 | Component           | Files                      | Lines | Status      |
 | ------------------- | -------------------------- | ----- | ----------- |
@@ -337,16 +338,28 @@ Each rubric criterion is evaluated by three judges with distinct philosophies:
 | PDF Tools           | src/tools/pdf_tools.py     | 110   | ✅ Complete |
 | Vision Tools        | src/tools/vision_tools.py  | 115   | ✅ Complete |
 | Detective Nodes     | src/nodes/detectives.py    | 220   | ✅ Complete |
-| Judge Nodes         | src/nodes/judges.py        | 150   | ✅ Complete |
-| Justice Node        | src/nodes/justice.py       | 180   | ✅ Complete |
 | Aggregator          | src/nodes/aggregator.py    | 25    | ✅ Complete |
 | Graph Orchestration | src/graph.py               | 75    | ✅ Complete |
 | CLI Entry Point     | src/main.py                | 95    | ✅ Complete |
 | Configuration       | src/utils/config.py        | 70    | ✅ Complete |
 | Rubric Loader       | src/utils/rubric_loader.py | 40    | ✅ Complete |
-| Prompts             | src/utils/prompts.py       | 80    | ✅ Complete |
 
-**Total**: ~1,425 lines of production code
+### ⚠️ Partially Complete (Judicial Layer)
+
+| Component     | Files                | Lines | Status                  | Missing                         |
+| ------------- | -------------------- | ----- | ----------------------- | ------------------------------- |
+| Judge Nodes   | src/nodes/judges.py  | 150   | ⚠️ Basic Implementation | Rubric-aware prompts            |
+| Judge Prompts | src/utils/prompts.py | 80    | ⚠️ Generic Templates    | Criterion-specific guidance     |
+| Chief Justice | src/nodes/justice.py | 180   | ⚠️ Naive Synthesis      | Confidence weighting, rationale |
+
+**Judicial Layer Gaps**:
+
+- Judges work but lack rubric-specific scoring guidance
+- Chief Justice synthesizes but doesn't explain reasoning
+- No cross-examination or multi-round deliberation
+- Evidence citations not validated
+
+**Total**: ~1,425 lines of production code (detective layer solid, judicial layer needs refinement)
 
 ### ✅ Test Coverage
 
@@ -404,14 +417,128 @@ Each rubric criterion is evaluated by three judges with distinct philosophies:
 
 ## Known Gaps & Future Work
 
-### Current Limitations
+### Critical Self-Assessment: What's NOT Yet Built
+
+#### 1. Judicial Layer - Incomplete Prompt Engineering
+
+**Gap**: Judge prompts lack rubric-specific guidance
+
+- ❌ Judges receive generic "evaluate this criterion" instructions
+- ❌ No rubric-specific scoring examples in prompts
+- ❌ Missing context about what score 1 vs 5 means per criterion
+- **Impact**: Inconsistent scoring, judges may misinterpret rubric intent
+- **Needed**: Inject rubric's `judicial_logic` field into each judge's prompt
+
+#### 2. Chief Justice - Naive Synthesis Algorithm
+
+**Gap**: Weighted averaging is too simplistic
+
+- ❌ Current: `score = 0.5*tech + 0.3*prosecutor + 0.2*defense`
+- ❌ Doesn't account for evidence quality (high vs low confidence)
+- ❌ No handling of extreme disagreement (e.g., scores 1, 3, 5)
+- ❌ Security override is binary (caps at 3), not nuanced
+- **Impact**: Final scores may not reflect evidence strength
+- **Needed**:
+  - Confidence-weighted synthesis
+  - Disagreement detection and resolution
+  - Evidence citation validation
+
+#### 3. Judicial Layer - No Cross-Examination
+
+**Gap**: Judges don't challenge each other's reasoning
+
+- ❌ Judges evaluate independently without seeing other opinions
+- ❌ No mechanism for Defense to rebut Prosecutor's harsh claims
+- ❌ Missing "deliberation" phase before Chief Justice synthesis
+- **Impact**: Dialectical reasoning is shallow, not truly adversarial
+- **Needed**: Multi-round evaluation with opinion exchange
+
+#### 4. Chief Justice - Missing Explanation Generation
+
+**Gap**: Final report lacks synthesis rationale
+
+- ❌ Report shows final score but not WHY that score was chosen
+- ❌ No explanation of which judge's argument was most persuasive
+- ❌ Doesn't cite specific evidence that influenced decision
+- **Impact**: Audit feels like black box, not transparent
+- **Needed**: Generate "Synthesis Rationale" section explaining:
+  - Which evidence was most credible
+  - Why certain judge opinions were weighted higher
+  - How conflicts were resolved
+
+#### 5. Judicial Layer - Hardcoded Judge Personas
+
+**Gap**: Judge personalities are static strings in prompts.py
+
+- ❌ Can't customize judge behavior per rubric
+- ❌ No way to add 4th judge (e.g., "Security Expert")
+- ❌ Personas don't adapt to criterion type (code vs docs)
+- **Impact**: Limited flexibility, one-size-fits-all evaluation
+- **Needed**:
+  - Configurable judge personas in rubric JSON
+  - Dynamic judge instantiation based on criterion
+  - Persona templates with variable injection
+
+#### 6. Chief Justice - No Tie-Breaking Logic
+
+**Gap**: Undefined behavior when weighted average is exactly 2.5 or 3.5
+
+- ❌ Should round up or down? Currently uses Python's default rounding
+- ❌ No "benefit of the doubt" policy
+- ❌ Doesn't consider effort vs outcome trade-off
+- **Impact**: Arbitrary score assignment in edge cases
+- **Needed**: Explicit tie-breaking rules (e.g., round up if Defense cites learning effort)
+
+### Architectural Gaps
+
+#### 7. Missing: Judge Opinion Validation
+
+**Gap**: No verification that judges actually cite evidence
+
+- ❌ Judges can hallucinate evidence locations
+- ❌ No check that `cited_evidence` list matches actual evidence keys
+- ❌ Judges might cite evidence from wrong detective
+- **Impact**: Unreliable audit trail, can't verify claims
+- **Needed**: Post-processing validation step
+
+#### 8. Missing: Confidence Calibration
+
+**Gap**: Detective confidence scores are subjective
+
+- ❌ No calibration across detectives (one detective's 0.9 ≠ another's 0.9)
+- ❌ Confidence doesn't factor into judicial weighting
+- ❌ No mechanism to downweight low-confidence evidence
+- **Impact**: Judges may over-rely on weak evidence
+- **Needed**: Confidence normalization and judicial awareness
+
+### Current Limitations (Non-Critical)
 
 1. **Vision Inspector**: Optional (requires Google API key)
 2. **PDF Parsing**: Fallback to PyPDF2 if Docling unavailable
 3. **Error Recovery**: Basic retry logic (can be enhanced)
 4. **Caching**: No LLM response caching yet
 
-### Planned Enhancements
+### Planned Enhancements (Priority Order)
+
+#### Phase 1: Fix Judicial Layer (Critical)
+
+1. **Rubric-Aware Prompts**: Inject `judicial_logic` into judge prompts
+2. **Evidence Validation**: Verify cited_evidence exists
+3. **Synthesis Explanation**: Generate rationale for final scores
+
+#### Phase 2: Enhance Chief Justice (High Priority)
+
+1. **Confidence-Weighted Synthesis**: Factor evidence quality into scoring
+2. **Disagreement Detection**: Flag when judges differ by >2 points
+3. **Tie-Breaking Rules**: Explicit policy for edge cases
+
+#### Phase 3: Advanced Features (Medium Priority)
+
+1. **Cross-Examination**: Multi-round judicial deliberation
+2. **Dynamic Personas**: Configurable judges per rubric
+3. **Confidence Calibration**: Normalize detective confidence scores
+
+#### Phase 4: Production Hardening (Low Priority)
 
 1. **Retry Logic**: Exponential backoff for LLM failures
 2. **Progress Tracking**: Real-time UI with Rich library
@@ -470,18 +597,26 @@ python test_integration.py
 
 ## Conclusion
 
-The Automaton Auditor represents a production-ready implementation of enterprise-grade multi-agent systems. The system successfully demonstrates:
+The Automaton Auditor demonstrates a working multi-agent system with strong forensic capabilities and functional judicial evaluation. The detective layer is production-ready, while the judicial layer and chief justice require refinement to achieve true dialectical reasoning and transparent synthesis.
 
-1. **Parallel Orchestration**: Fan-out/fan-in with LangGraph
-2. **Dialectical Reasoning**: Three distinct judge personas
-3. **Deterministic Synthesis**: Explainable conflict resolution
-4. **Production Quality**: Type-safe, observable, secure
+**Current State**:
 
-The system is ready for peer review and production deployment.
+1. ✅ **Parallel Orchestration**: Fan-out/fan-in with LangGraph working
+2. ✅ **Evidence Collection**: Comprehensive forensic analysis
+3. ⚠️ **Dialectical Reasoning**: Basic judge personas, needs cross-examination
+4. ⚠️ **Synthesis**: Functional but simplistic, needs confidence weighting
+
+**Next Steps** (see "Known Gaps & Future Work" section):
+
+1. Inject rubric-specific guidance into judge prompts
+2. Add confidence-weighted synthesis in Chief Justice
+3. Generate synthesis rationale for transparency
+4. Implement evidence citation validation
+
+The system is functional for peer review but has clear areas for improvement identified above.
 
 ---
 
 **Repository**: https://github.com/IbnuEyni/10Acweek2  
 **Documentation**: README.md, ARCHITECTURE.md  
-**Tests**: 5 test suites, all passing  
-**Status**: ✅ Production Ready
+**Tests**: 5 test suites, all passing
