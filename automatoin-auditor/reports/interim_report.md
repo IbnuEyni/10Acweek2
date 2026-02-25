@@ -69,13 +69,16 @@ The Chief Justice synthesizes conflicting opinions using deterministic rules (se
 
 _Figure 1: Complete system architecture showing parallel execution, fan-out/fan-in patterns, and multi-agent orchestration_
 
-### The Digital Courtroom Model
+### The Digital Courtroom Model with State Flow
 
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                    START AUDIT                          │
+│  Input: repo_url, pdf_path, rubric_dimensions           │
 └────────────────────┬────────────────────────────────────┘
-                     │
+                     │ AgentState: {evidences: {}, 
+                     │             opinions: [],
+                     │             errors: []}
                      ▼
         ┌────────────────────────────┐
         │   DETECTIVE LAYER (Parallel)│
@@ -92,37 +95,91 @@ _Figure 1: Complete system architecture showing parallel execution, fan-out/fan-
 │Git + AST     │ │PDF Parse │ │Gemini 2.5    │
 └──────┬───────┘ └────┬─────┘ └──────┬───────┘
        │              │              │
+       │ Evidence[]   │ Evidence[]   │ Evidence[]
+       │ (repo data)  │ (doc data)   │ (diagram data)
+       │              │              │
        └──────────────┼──────────────┘
                       │
+                      │ operator.ior merges
+                      │ Dict[str, List[Evidence]]
                       ▼
         ┌─────────────────────────┐
         │  EVIDENCE AGGREGATOR    │
         │  Fan-In Synchronization │
         └─────────────────────────┘
                       │
-        ┌─────────────┼─────────────┐
-        │             │             │
-        ▼             ▼             ▼
-┌──────────────┐ ┌──────────┐ ┌──────────────┐
-│Prosecutor    │ │Defense   │ │Tech Lead     │
-│              │ │          │ │              │
-│Critical Lens │ │Optimistic│ │Pragmatic     │
-│Groq Llama    │ │Lens      │ │Lens          │
-└──────┬───────┘ └────┬─────┘ └──────┬───────┘
-       │              │              │
-       └──────────────┼──────────────┘
+                      │ [CONDITIONAL EDGE]
+                      │ Check: len(evidences) > 0?
+                      │
+              ┌───────┴───────┐
+              │               │
+         YES  │               │  NO
+              ▼               ▼
+    ┌─────────────┐   ┌──────────────┐
+    │  JUDICIAL   │   │ ERROR REPORT │
+    │   LAYER     │   │   (Graceful  │
+    │             │   │  Degradation)│
+    └─────────────┘   └──────┬───────┘
+              │               │
+        ┌─────┼─────┐         │
+        │     │     │         │
+        ▼     ▼     ▼         │
+┌──────────┐ ┌──────┐ ┌──────┐│
+│Prosecutor│ │Defense│ │Tech  ││
+│          │ │       │ │Lead  ││
+│Critical  │ │Optim- │ │Pragm-││
+│Lens      │ │istic  │ │atic  ││
+│Groq LLM  │ │Lens   │ │Lens  ││
+└────┬─────┘ └───┬──┘ └──┬───┘│
+     │           │       │    │
+     │ Opinion[] │       │    │
+     │ (score,   │       │    │
+     │  argument,│       │    │
+     │  evidence)│       │    │
+     │           │       │    │
+     └───────────┼───────┘    │
+                 │            │
+                 │ operator.add concatenates
+                 │ List[JudicialOpinion]
+                 ▼            │
+   ┌─────────────────────────┐│
+   │   CHIEF JUSTICE         ││
+   │   Deterministic Synthesis││
+   │   - Security override   ││
+   │   - Weighted avg        ││
+   │   - Fact supremacy      ││
+   └─────────────────────────┘│
+                 │            │
+                 │ final_report: str
+                 │            │
+                 └────────────┘
                       │
                       ▼
         ┌─────────────────────────┐
-        │   CHIEF JUSTICE         │
-        │   Deterministic Synthesis│
-        └─────────────────────────┘
-                      │
-                      ▼
-        ┌─────────────────────────┐
-        │    AUDIT REPORT         │
+        │    AUDIT REPORT (END)   │
+        │  Output: Markdown + JSON│
         └─────────────────────────┘
 ```
+
+**State Type Annotations**:
+- `AgentState`: TypedDict with Annotated reducers
+- `Evidence`: Pydantic model (goal, found, confidence, location, rationale)
+- `JudicialOpinion`: Pydantic model (judge, criterion_id, score, argument, cited_evidence)
+- `operator.ior`: Dict merge (|=) for parallel-safe evidence collection
+- `operator.add`: List concatenation (+) for parallel-safe opinion aggregation
+
+**Conditional Edge Logic**:
+```python
+def should_continue_to_judicial(state: AgentState) -> Literal["judicial", "error_report"]:
+    if not state.get("evidences") or len(state["evidences"]) == 0:
+        return "error_report"  # All detectives failed
+    return "judicial"  # Evidence exists, proceed to judges
+```
+
+**Error Handling Path**:
+- If all detectives fail → route to `error_report_node`
+- Generates diagnostic report with error list
+- Graceful degradation instead of crash
 
 ### Parallel Execution Strategy
 
