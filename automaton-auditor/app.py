@@ -9,6 +9,7 @@ from datetime import datetime
 from src.graph import build_audit_graph
 from src.utils.rubric_loader import load_rubric
 from src.state import AgentState, RubricDimension
+from src.utils.config import Config
 
 
 st.set_page_config(
@@ -50,8 +51,7 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("### System Status")
     
-    # Check API keys
-    from src.utils.config import Config
+    # Check API keys (Config already imported at top)
     
     groq_status = "✅" if Config.GROQ_API_KEY else "❌"
     deepseek_status = "✅" if Config.DEEPSEEK_API_KEY else "❌"
