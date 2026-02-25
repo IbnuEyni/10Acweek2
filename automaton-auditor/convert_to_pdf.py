@@ -1,12 +1,21 @@
 #!/usr/bin/env python3
-"""Convert markdown to PDF with styling."""
+"""Convert markdown to PDF with styling and images."""
 import markdown
 from weasyprint import HTML, CSS
 from pathlib import Path
+import re
 
 # Read markdown
 md_path = Path("reports/interim_report.md")
 md_content = md_path.read_text()
+
+# Fix image paths to be absolute
+reports_dir = md_path.parent.absolute()
+md_content = re.sub(
+    r'!\[([^\]]*)\]\(([^)]+\.png)\)',
+    lambda m: f'![{m.group(1)}](file://{reports_dir}/{m.group(2)})',
+    md_content
+)
 
 # Convert to HTML
 html_content = markdown.markdown(
@@ -39,6 +48,7 @@ styled_html = f"""
         th {{ background: #3498db; color: white; }}
         tr:nth-child(even) {{ background: #f9f9f9; }}
         blockquote {{ border-left: 4px solid #3498db; padding-left: 20px; margin: 20px 0; color: #555; }}
+        img {{ max-width: 100%; height: auto; margin: 20px 0; border: 1px solid #ddd; }}
     </style>
 </head>
 <body>
