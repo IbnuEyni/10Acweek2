@@ -39,23 +39,34 @@ The Automaton Auditor is an enterprise-grade multi-agent system that autonomousl
 This system implements five core multi-agent principles from distributed AI research:
 
 #### 1. Agent Autonomy
+
 Each agent (detective or judge) operates independently with specialized knowledge and decision-making capabilities. Detectives autonomously choose analysis strategies, while judges independently evaluate evidence without coordination.
 
 #### 2. Parallel Execution
+
 The fan-out/fan-in architecture enables concurrent agent operation. Three detectives collect evidence simultaneously, followed by three judges evaluating in parallel. This reduces audit time from ~120s (sequential) to ~45s (parallel).
 
 #### 3. State Synchronization
+
 Reducers (`operator.ior` for dicts, `operator.add` for lists) implement **conflict-free replicated data types (CRDTs)**. When multiple agents update shared state concurrently, reducers merge changes deterministically without data loss. This ensures **commutative** and **idempotent** operations for parallel safety.
 
 #### 4. Dialectical Reasoning
+
 The Prosecutor-Defense-TechLead triad implements adversarial collaboration. Opposing viewpoints (harsh vs generous) force comprehensive evaluation, while the pragmatic TechLead provides grounded assessment. This mirrors real code review dynamics.
 
 #### 5. Hierarchical Decision Making
+
 The Chief Justice synthesizes conflicting opinions using deterministic rules (security override, fact supremacy, weighted resolution). This creates explainable, auditable decisions unlike pure LLM-based synthesis.
 
 ---
 
 ## Architecture Overview
+
+### System Architecture Diagram
+
+![Automaton Auditor Architecture](architecture_diagram.png)
+
+_Figure 1: Complete system architecture showing parallel execution, fan-out/fan-in patterns, and multi-agent orchestration_
 
 ### The Digital Courtroom Model
 
