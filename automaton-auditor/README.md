@@ -5,7 +5,6 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![LangGraph](https://img.shields.io/badge/LangGraph-StateGraph-green.svg)](https://langchain-ai.github.io/langgraph/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Score: 3.75/5.0](https://img.shields.io/badge/Score-3.75%2F5.0-brightgreen.svg)](https://github.com/IbnuEyni/10Acweek2)
 
 ## 🎯 Overview
 
@@ -17,7 +16,6 @@ Automaton Auditor implements a **"Digital Courtroom"** architecture where autono
 - ✅ **Dialectical Reasoning**: Prosecutor, Defense, and Tech Lead provide adversarial evaluation
 - ✅ **Production-Grade**: Type-safe with Pydantic, sandboxed operations, full observability
 - ✅ **Multi-LLM Support**: Groq, DeepSeek, OpenAI, Anthropic
-- ✅ **Score**: 3.75/5.0 (Competent Orchestrator)
 
 ---
 
@@ -68,11 +66,11 @@ Automaton Auditor implements a **"Digital Courtroom"** architecture where autono
 
 ### 🎭 The Digital Courtroom
 
-| Layer | Agents | Role | Technology |
-|-------|--------|------|------------|
-| **Detective** | 3 agents | Forensic evidence collection | Git, AST, PDF, Vision AI |
-| **Judicial** | 3 judges | Dialectical evaluation | Groq/DeepSeek LLMs |
-| **Supreme Court** | 1 justice | Deterministic synthesis | Python rules |
+| Layer             | Agents    | Role                         | Technology               |
+| ----------------- | --------- | ---------------------------- | ------------------------ |
+| **Detective**     | 3 agents  | Forensic evidence collection | Git, AST, PDF, Vision AI |
+| **Judicial**      | 3 judges  | Dialectical evaluation       | Groq/DeepSeek LLMs       |
+| **Supreme Court** | 1 justice | Deterministic synthesis      | Python rules             |
 
 ---
 
@@ -125,22 +123,26 @@ Then open http://localhost:8501 and select your LLM provider!
 ## 💡 Features
 
 ### 🔬 Forensic Analysis
+
 - **AST Parsing**: Detects LangGraph patterns, Pydantic models, state reducers
 - **Git Analysis**: Atomic commit verification, history analysis
 - **PDF Analysis**: Concept extraction, keyword density, cross-referencing
 - **Vision Analysis**: Diagram classification with Gemini 2.5 Flash
 
 ### ⚖️ Dialectical Reasoning
+
 - **Prosecutor**: Critical lens (security-focused, harsh scoring)
 - **Defense**: Optimistic lens (effort-focused, generous scoring)
 - **Tech Lead**: Pragmatic lens (functionality-focused, realistic scoring)
 
 ### 🧠 Deterministic Synthesis
+
 - **Security Override**: Security flaws cap score at 3
 - **Fact Supremacy**: Tech Lead overrides when score ≤ 2
 - **Weighted Resolution**: Tech Lead 50%, Prosecutor 30%, Defense 20%
 
 ### 🔒 Production-Grade
+
 - ✅ **Type Safety**: 100% Pydantic validation
 - ✅ **Sandboxing**: Isolated git operations with tempfile
 - ✅ **Parallel Safety**: State reducers (operator.add, operator.ior)
@@ -151,31 +153,34 @@ Then open http://localhost:8501 and select your LLM provider!
 
 ## 📊 Performance
 
-| Metric | Value |
-|--------|-------|
-| **Audit Duration** | ~45 seconds |
-| **Evidence Collected** | 7 categories |
-| **Judicial Opinions** | 12 (3 judges × 4 criteria) |
-| **Parallel Speedup** | 2.5x vs sequential |
-| **Cost (DeepSeek)** | $0.02 per audit |
-| **Cost (Groq)** | $0 (free tier, 3-4 audits/day) |
+| Metric                 | Value                          |
+| ---------------------- | ------------------------------ |
+| **Audit Duration**     | ~45 seconds                    |
+| **Evidence Collected** | 7 categories                   |
+| **Judicial Opinions**  | 12 (3 judges × 4 criteria)     |
+| **Parallel Speedup**   | 2.5x vs sequential             |
+| **Cost (DeepSeek)**    | $0.02 per audit                |
+| **Cost (Groq)**        | $0 (free tier, 3-4 audits/day) |
 
 ---
 
 ## 🛠️ Technology Stack
 
 ### Core Framework
+
 - **LangGraph**: StateGraph with parallel execution
 - **Pydantic**: Type-safe state management
 - **Python 3.11+**: Modern async/await patterns
 
 ### LLM Providers
+
 - **Groq**: Llama 3.3 70B (free, fast)
 - **DeepSeek**: DeepSeek V3 (cheap, unlimited)
 - **OpenAI**: GPT-4o (premium)
 - **Anthropic**: Claude 3.5 Sonnet (advanced)
 
 ### Analysis Tools
+
 - **AST**: Python ast module for code analysis
 - **Git**: Subprocess with sandboxing
 - **PDF**: PyPDF2 for document parsing
@@ -236,6 +241,7 @@ pytest --cov=src tests/
 ```
 
 ### Test Results
+
 - ✅ Phase 1 Validation: PASS
 - ✅ Phase 2 Detective: PASS
 - ✅ Phase 3 Judicial: PASS
@@ -255,6 +261,7 @@ pytest --cov=src tests/
 ## 🎓 Key Concepts
 
 ### Multi-Agent Principles
+
 1. **Agent Autonomy**: Each agent operates independently
 2. **Parallel Execution**: Fan-out/fan-in architecture
 3. **State Synchronization**: CRDTs with reducers
@@ -262,23 +269,12 @@ pytest --cov=src tests/
 5. **Hierarchical Decision Making**: Deterministic synthesis
 
 ### Architectural Patterns
+
 - **StateGraph Orchestration**: Declarative workflow with LangGraph
 - **Fan-Out Pattern**: 1 → N parallel execution
 - **Fan-In Pattern**: N → 1 synchronization
 - **State Reducers**: Conflict-free replicated data types
 - **Sandboxed Execution**: Isolated operations with tempfile
-
----
-
-## 📈 Audit Score: 3.75/5.0
-
-**Grade**: ✅ **Competent Orchestrator - Solid work**
-
-### Criterion Breakdown
-- **Forensic Accuracy (Code)**: 3/5
-- **Forensic Accuracy (Docs)**: 4/5 ⭐
-- **Judicial Nuance**: 4/5 ⭐
-- **LangGraph Architecture**: 4/5 ⭐
 
 ---
 
@@ -297,6 +293,7 @@ MIT License - See LICENSE file for details
 ## 👤 Author
 
 **Amir Ahmedin**
+
 - GitHub: [@IbnuEyni](https://github.com/IbnuEyni)
 - Project: FDE Challenge Week 2
 
