@@ -1,10 +1,10 @@
 # Automaton Auditor - Interim Report
+
 ## Enterprise Multi-Agent Code Review System
 
-**Author**: Shuaib Ibrahim  
-**Date**: February 24, 2026  
-**Project**: FDE Challenge Week 2  
-**Status**: Phase 4 Complete - Production Ready
+**Name**: Amir Ahmedin
+**Date**: February 25, 2026  
+**Project**: FDE Challenge Week 2
 
 ---
 
@@ -22,13 +22,13 @@ The Automaton Auditor is an enterprise-grade multi-agent system that autonomousl
 
 ### System Capabilities
 
-| Component | Status | Technology |
-|-----------|--------|------------|
-| Detective Layer | ✅ Complete | Git, AST, PDF, Vision AI |
-| Judicial Layer | ✅ Complete | Groq Llama 3.3 70B |
-| Chief Justice | ✅ Complete | Deterministic Python |
-| Graph Orchestration | ✅ Complete | LangGraph StateGraph |
-| Observability | ✅ Complete | LangSmith Tracing |
+| Component           | Status      | Technology               |
+| ------------------- | ----------- | ------------------------ |
+| Detective Layer     | ✅ Complete | Git, AST, PDF, Vision AI |
+| Judicial Layer      | ✅ Complete | Groq Llama 3.3 70B       |
+| Chief Justice       | ✅ Complete | Deterministic Python     |
+| Graph Orchestration | ✅ Complete | LangGraph StateGraph     |
+| Observability       | ✅ Complete | LangSmith Tracing        |
 
 ---
 
@@ -112,12 +112,14 @@ The system achieves high performance through two levels of parallelism:
 **Decision**: Use Pydantic BaseModel for all data structures
 
 **Rationale**:
+
 - **Type Safety**: Runtime validation prevents silent failures
 - **IDE Support**: Autocomplete and type checking
 - **Self-Documentation**: Schema serves as documentation
 - **Validation**: Automatic constraint checking (e.g., score 1-5)
 
 **Implementation**:
+
 ```python
 class Evidence(BaseModel):
     goal: str
@@ -133,12 +135,14 @@ class Evidence(BaseModel):
 **Decision**: Use Python's `ast` module for code analysis
 
 **Rationale**:
+
 - **Robustness**: Handles all valid Python syntax
 - **Precision**: Understands code structure, not just patterns
 - **Maintainability**: No brittle regex patterns
 - **Security**: No eval() or exec() risks
 
 **Implementation**:
+
 ```python
 def detect_langgraph_patterns(file_path: Path) -> Dict:
     tree = ast.parse(file.read())
@@ -155,12 +159,14 @@ def detect_langgraph_patterns(file_path: Path) -> Dict:
 **Decision**: Use `tempfile.mkdtemp()` for repository cloning
 
 **Rationale**:
+
 - **Security**: Isolated from main filesystem
 - **Cleanup**: Automatic deletion on exit
 - **Concurrency**: Multiple audits can run simultaneously
 - **Safety**: No risk of overwriting existing files
 
 **Implementation**:
+
 ```python
 def safe_clone_repo(repo_url: str) -> Path:
     temp_dir = tempfile.mkdtemp(prefix="audit_repo_")
@@ -179,12 +185,14 @@ def safe_clone_repo(repo_url: str) -> Path:
 **Decision**: Use `operator.add` and `operator.ior` for state management
 
 **Rationale**:
+
 - **Data Safety**: Prevents overwrites in parallel execution
 - **LangGraph Native**: Built-in pattern for concurrent nodes
 - **Functional**: No locks or mutexes needed
 - **Predictable**: Deterministic merge behavior
 
 **Implementation**:
+
 ```python
 class AgentState(TypedDict):
     evidences: Annotated[Dict[str, List[Evidence]], operator.ior]
@@ -200,11 +208,13 @@ class AgentState(TypedDict):
 ### Detective Layer Architecture
 
 #### RepoInvestigator (Code Detective)
+
 **Purpose**: Forensic code analysis  
 **Tools**: Git, AST parser, file system  
 **Output**: Structured Evidence objects
 
 **Forensic Protocols**:
+
 1. **Git History Analysis**: Atomic vs monolithic commits
 2. **State Management**: Pydantic model detection
 3. **Graph Orchestration**: StateGraph pattern detection
@@ -213,11 +223,13 @@ class AgentState(TypedDict):
 **Key Innovation**: AST-based detection (no regex)
 
 #### DocAnalyst (Paperwork Detective)
+
 **Purpose**: PDF report analysis  
 **Tools**: Docling, PyPDF2, text processing  
 **Output**: Concept extraction, keyword density
 
 **Forensic Protocols**:
+
 1. **Theoretical Depth**: Search for key concepts
 2. **Architectural Keywords**: Count technical terms
 3. **Cross-Reference**: Verify PDF claims match code
@@ -225,11 +237,13 @@ class AgentState(TypedDict):
 **Key Innovation**: RAG-lite approach for large documents
 
 #### VisionInspector (Diagram Detective)
+
 **Purpose**: Architectural diagram analysis  
 **Tools**: Gemini 2.5 Flash (multimodal)  
 **Output**: Diagram classification, flow analysis
 
 **Forensic Protocols**:
+
 1. **Diagram Type**: StateGraph vs generic flowchart
 2. **Parallel Execution**: Fan-out/fan-in detection
 3. **Node Identification**: Extract component names
@@ -243,16 +257,19 @@ class AgentState(TypedDict):
 Each rubric criterion is evaluated by three judges with distinct philosophies:
 
 **Prosecutor (Critical Lens)**
+
 - Philosophy: "Trust No One. Assume Vibe Coding."
 - Focus: Security flaws, missing features, technical debt
 - Scoring: Harsh (typically 1-2 for incomplete work)
 
 **Defense (Optimistic Lens)**
+
 - Philosophy: "Reward Effort and Intent."
 - Focus: Creative solutions, deep understanding, learning process
 - Scoring: Generous (typically 3-4 for good effort)
 
 **Tech Lead (Pragmatic Lens)**
+
 - Philosophy: "Does it actually work?"
 - Focus: Functionality, maintainability, practical viability
 - Scoring: Realistic (typically 2-3 for working code)
@@ -265,6 +282,7 @@ Each rubric criterion is evaluated by three judges with distinct philosophies:
 **Method**: Hardcoded Python rules (NOT LLM)
 
 **Synthesis Rules**:
+
 1. **Security Override**: Security flaws cap score at 3
 2. **Fact Supremacy**: Tech Lead overrides opinions when score ≤ 2
 3. **Weighted Resolution**: Tech Lead 50%, Prosecutor 30%, Defense 20%
@@ -277,34 +295,34 @@ Each rubric criterion is evaluated by three judges with distinct philosophies:
 
 ### ✅ Completed Components
 
-| Component | Files | Lines | Status |
-|-----------|-------|-------|--------|
-| State Management | src/state.py | 60 | ✅ Complete |
-| Git Tools | src/tools/git_tools.py | 85 | ✅ Complete |
-| AST Tools | src/tools/ast_tools.py | 120 | ✅ Complete |
-| PDF Tools | src/tools/pdf_tools.py | 110 | ✅ Complete |
-| Vision Tools | src/tools/vision_tools.py | 115 | ✅ Complete |
-| Detective Nodes | src/nodes/detectives.py | 220 | ✅ Complete |
-| Judge Nodes | src/nodes/judges.py | 150 | ✅ Complete |
-| Justice Node | src/nodes/justice.py | 180 | ✅ Complete |
-| Aggregator | src/nodes/aggregator.py | 25 | ✅ Complete |
-| Graph Orchestration | src/graph.py | 75 | ✅ Complete |
-| CLI Entry Point | src/main.py | 95 | ✅ Complete |
-| Configuration | src/utils/config.py | 70 | ✅ Complete |
-| Rubric Loader | src/utils/rubric_loader.py | 40 | ✅ Complete |
-| Prompts | src/utils/prompts.py | 80 | ✅ Complete |
+| Component           | Files                      | Lines | Status      |
+| ------------------- | -------------------------- | ----- | ----------- |
+| State Management    | src/state.py               | 60    | ✅ Complete |
+| Git Tools           | src/tools/git_tools.py     | 85    | ✅ Complete |
+| AST Tools           | src/tools/ast_tools.py     | 120   | ✅ Complete |
+| PDF Tools           | src/tools/pdf_tools.py     | 110   | ✅ Complete |
+| Vision Tools        | src/tools/vision_tools.py  | 115   | ✅ Complete |
+| Detective Nodes     | src/nodes/detectives.py    | 220   | ✅ Complete |
+| Judge Nodes         | src/nodes/judges.py        | 150   | ✅ Complete |
+| Justice Node        | src/nodes/justice.py       | 180   | ✅ Complete |
+| Aggregator          | src/nodes/aggregator.py    | 25    | ✅ Complete |
+| Graph Orchestration | src/graph.py               | 75    | ✅ Complete |
+| CLI Entry Point     | src/main.py                | 95    | ✅ Complete |
+| Configuration       | src/utils/config.py        | 70    | ✅ Complete |
+| Rubric Loader       | src/utils/rubric_loader.py | 40    | ✅ Complete |
+| Prompts             | src/utils/prompts.py       | 80    | ✅ Complete |
 
 **Total**: ~1,425 lines of production code
 
 ### ✅ Test Coverage
 
-| Test | File | Status |
-|------|------|--------|
-| Phase 1 Validation | validate_phase1.py | ✅ Pass |
-| Phase 2 Detective | test_phase2_manual.py | ✅ Pass |
-| Phase 3 Judicial | test_phase3_manual.py | ✅ Pass |
-| Vision Setup | test_vision_setup.py | ✅ Pass |
-| Integration | test_integration.py | ✅ Pass (6/6) |
+| Test               | File                  | Status        |
+| ------------------ | --------------------- | ------------- |
+| Phase 1 Validation | validate_phase1.py    | ✅ Pass       |
+| Phase 2 Detective  | test_phase2_manual.py | ✅ Pass       |
+| Phase 3 Judicial   | test_phase3_manual.py | ✅ Pass       |
+| Vision Setup       | test_vision_setup.py  | ✅ Pass       |
+| Integration        | test_integration.py   | ✅ Pass (6/6) |
 
 ---
 
@@ -313,12 +331,14 @@ Each rubric criterion is evaluated by three judges with distinct philosophies:
 ### Multi-LLM Strategy
 
 **Groq (Llama 3.3 70B)** - Judicial Layer
+
 - Free tier: 30 requests/minute
 - Fast inference: ~500 tokens/second
 - Cost: $0 (free tier)
 - Use case: Judge evaluations (requires reasoning)
 
 **Gemini 2.5 Flash** - Vision Inspector
+
 - Free tier: 1,500 requests/day
 - Multimodal: Text + images
 - Cost: $0 (free tier)
@@ -337,14 +357,14 @@ Each rubric criterion is evaluated by three judges with distinct philosophies:
 
 ### Performance Metrics
 
-| Metric | Value |
-|--------|-------|
-| Audit Duration | ~45 seconds |
-| Evidence Collected | 6-10 categories |
-| Judicial Opinions | 12 (3 judges × 4 criteria) |
-| Report Size | ~15,000 characters |
-| LLM Calls | 4 (1 vision + 3 judges) |
-| Parallel Speedup | 2.5x vs sequential |
+| Metric             | Value                      |
+| ------------------ | -------------------------- |
+| Audit Duration     | ~45 seconds                |
+| Evidence Collected | 6-10 categories            |
+| Judicial Opinions  | 12 (3 judges × 4 criteria) |
+| Report Size        | ~15,000 characters         |
+| LLM Calls          | 4 (1 vision + 3 judges)    |
+| Parallel Speedup   | 2.5x vs sequential         |
 
 ---
 
@@ -370,6 +390,7 @@ Each rubric criterion is evaluated by three judges with distinct philosophies:
 ## Deployment Instructions
 
 ### Prerequisites
+
 ```bash
 # Python 3.11+
 python3 --version
@@ -384,6 +405,7 @@ git --version
 ```
 
 ### Installation
+
 ```bash
 # Clone repository
 git clone https://github.com/IbnuEyni/10Acweek2
@@ -398,6 +420,7 @@ cp .env.example .env
 ```
 
 ### Usage
+
 ```bash
 # Run audit
 python -m src.main \
