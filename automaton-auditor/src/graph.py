@@ -1,8 +1,15 @@
 """
 LangGraph orchestration with parallel execution.
 Implements fan-out/fan-in architecture for detective and judicial layers.
+
+Key Patterns:
+- StateGraph: LangGraph's declarative workflow engine
+- Fan-Out: Single node branches to multiple parallel nodes
+- Fan-In: Multiple nodes converge to single aggregator
+- Parallel Execution: Nodes without dependencies run concurrently
 """
 from langgraph.graph import StateGraph, END
+from langgraph.graph.graph import CompiledGraph
 from src.state import AgentState
 from src.nodes.detectives import (
     repo_investigator_node,
@@ -14,7 +21,7 @@ from src.nodes.judges import prosecutor_node, defense_node, tech_lead_node
 from src.nodes.justice import chief_justice_node
 
 
-def build_audit_graph():
+def build_audit_graph() -> CompiledGraph:
     """
     Build the multi-agent audit graph with parallel execution.
     
@@ -22,8 +29,13 @@ def build_audit_graph():
         Detective Layer (Parallel) → Aggregator (Fan-In) → 
         Judicial Layer (Parallel) → Chief Justice → Report
     
+    Parallel Execution:
+        - Detective layer: 3 nodes run concurrently (repo, doc, vision)
+        - Judicial layer: 3 nodes run concurrently (prosecutor, defense, tech_lead)
+        - State reducers (operator.ior, operator.add) ensure thread-safe merging
+    
     Returns:
-        Compiled StateGraph ready for execution
+        CompiledGraph: LangGraph StateGraph ready for execution
     """
     graph = StateGraph(AgentState)
     

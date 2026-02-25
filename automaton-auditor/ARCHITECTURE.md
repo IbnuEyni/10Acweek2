@@ -156,9 +156,17 @@ Evidence                    JudicialOpinion              RubricDimension
    └─ Write to audit/report_*.md
 ```
 
-## Key Patterns
+## Architectural Patterns
 
-### Fan-Out / Fan-In
+### StateGraph Orchestration
+LangGraph's StateGraph provides declarative workflow definition with conditional edges. Unlike imperative control flow, StateGraph enables:
+- **Compile-time validation**: Graph structure verified before execution
+- **Automatic parallelization**: Nodes without dependencies run concurrently
+- **State persistence**: Checkpointing for long-running workflows
+- **Visual debugging**: Graph visualization with Mermaid export
+
+### Fan-Out Pattern
+Single node branches to multiple parallel nodes. Used in detective layer (1 → 3) and judicial layer (1 → 3).
 
 ```
         START
@@ -166,21 +174,25 @@ Evidence                    JudicialOpinion              RubricDimension
     ┌─────┼─────┐
     │     │     │
    [A]   [B]   [C]  ← Parallel execution
+```
+
+**Implementation**: Multiple `add_edge()` calls from same source node.
+
+### Fan-In Pattern
+Multiple nodes converge to single aggregator. Synchronization point for parallel results.
+
+```
+   [A]   [B]   [C]
     │     │     │
     └─────┼─────┘
           │
        SYNC NODE   ← Aggregation
-          │
-    ┌─────┼─────┐
-    │     │     │
-   [D]   [E]   [F]  ← Parallel execution
-    │     │     │
-    └─────┼─────┘
-          │
-         END
 ```
 
-### State Reducers
+**Implementation**: Multiple `add_edge()` calls to same target node.
+
+### State Reducers (CRDTs)
+Conflict-free replicated data types ensure parallel safety without locks.
 
 ```python
 # Without reducer (WRONG - data loss)
@@ -190,16 +202,38 @@ state["opinions"] = [opinion1]  # Overwrites!
 state["opinions"] = [opinion1]  # Appends via operator.add
 ```
 
+**operator.add**: Concatenates lists (for opinions)  
+**operator.ior**: Merges dicts (for evidences)  
+
+### Sandboxed Execution
+Git operations in isolated tempfile.mkdtemp() environments prevent:
+- **Filesystem pollution**: No persistent clones
+- **Path traversal attacks**: Contained in temp directory
+- **Concurrent conflicts**: Each audit gets unique directory
+- **Resource leaks**: Automatic cleanup with shutil.rmtree()
+
 ## Technology Stack
 
-- **Orchestration**: LangGraph (StateGraph)
-- **LLMs**: Groq Llama 3.3 70B (Judges), Gemini 2.5 Flash (Vision)
-- **Validation**: Pydantic 2.x
-- **Git Operations**: GitPython
-- **PDF Parsing**: Docling
-- **Observability**: LangSmith
-- **Testing**: pytest
-- **Deployment**: Docker
+### Core Framework
+- **Orchestration**: LangGraph StateGraph with parallel execution
+- **State Management**: TypedDict with Annotated reducers
+- **Validation**: Pydantic 2.x BaseModel with Field constraints
+
+### LLM Infrastructure
+- **Judicial Layer**: Groq Llama 3.3 70B Versatile (free tier, 30 req/min)
+- **Vision Layer**: Google Gemini 2.5 Flash (multimodal, 1500 req/day)
+- **Observability**: LangSmith tracing with automatic logging
+
+### Analysis Tools
+- **Code Analysis**: Python ast module (AST parsing)
+- **Git Operations**: subprocess with sandboxed tempfile.mkdtemp()
+- **PDF Parsing**: Docling (primary), PyPDF2 (fallback)
+- **Image Extraction**: pdf2image with Pillow
+
+### Development
+- **Testing**: pytest with integration test suite
+- **Deployment**: Docker with multi-stage builds
+- **CLI**: argparse with progress tracking
 
 ## Security Features
 
