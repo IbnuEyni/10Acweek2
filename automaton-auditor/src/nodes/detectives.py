@@ -124,11 +124,11 @@ def doc_analyst_node(state: AgentState) -> AgentState:
         
         # Evidence 1: Theoretical Depth
         key_concepts = [
-            "Dialectical Synthesis",
-            "Metacognition",
-            "Fan-Out",
-            "Fan-In",
-            "State Synchronization"
+            "Agent Autonomy",
+            "Parallel Execution",
+            "State Synchronization",
+            "Dialectical Reasoning",
+            "Hierarchical Decision"
         ]
         
         concept_findings = extract_concepts(text, key_concepts)
