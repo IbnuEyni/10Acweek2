@@ -78,14 +78,12 @@ Automaton Auditor implements a **"Digital Courtroom"** architecture where autono
 
 **⚡ New to the project? See [QUICKSTART.md](QUICKSTART.md) for one-command setup!**
 
-### Prerequisites
+### Runtime Requirements
 
-- Python 3.11+
-- Git
-- API keys (choose one):
-  - **Groq** (free, fast) - [Get key](https://console.groq.com/keys)
-  - **DeepSeek** (cheap, unlimited) - [Get key](https://platform.deepseek.com/api_keys)
-  - OpenAI or Anthropic
+- **Python**: 3.11.0+ (specified in `.python-version`)
+- **Git**: 2.0+
+- **Dependencies**: Locked in `requirements.txt` (pip-freeze snapshot)
+- **API Keys**: At least one LLM provider (Groq recommended for free tier)
 
 ### Installation
 
@@ -94,35 +92,76 @@ Automaton Auditor implements a **"Digital Courtroom"** architecture where autono
 git clone https://github.com/IbnuEyni/10Acweek2
 cd 10Acweek2/automatoin-auditor
 
+# Verify Python version
+python3 --version  # Should be 3.11.0 or higher
+
 # Create virtual environment
 python3 -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 
-# Install dependencies (locked versions)
+# Install locked dependencies (reproducible builds)
 pip install -r requirements.txt
 
 # Configure environment
 cp .env.example .env
-# Edit .env with your API keys
+# Edit .env and add your GROQ_API_KEY from https://console.groq.com/keys
 ```
 
-### Run Your First Audit
+### Complete End-to-End Example
+
+**Scenario**: Audit this repository against its own interim report
 
 ```bash
-# Audit a GitHub repository
-python src/main.py \
-  --repo-url https://github.com/username/repo \
-  --pdf-path path/to/report.pdf \
-  --output audit/my_audit.md
+# Step 1: Ensure you're in the project directory
+cd /path/to/10Acweek2/automatoin-auditor
+
+# Step 2: Activate virtual environment
+source venv/bin/activate
+
+# Step 3: Run detective graph against sample repo and PDF
+python -m src.main \
+  --repo-url https://github.com/IbnuEyni/10Acweek2 \
+  --pdf-path reports/interim_report.pdf \
+  --output audit/self_audit_example/
+
+# Expected output:
+# ✅ Cloning repository...
+# ✅ Detective Layer: RepoInvestigator found 8 StateGraph nodes
+# ✅ Detective Layer: DocAnalyst found 17 architectural keywords
+# ✅ Detective Layer: VisionInspector analyzing diagrams...
+# ✅ Judicial Layer: 3 judges evaluating 4 criteria (12 opinions)
+# ✅ Chief Justice: Synthesizing final scores...
+# ✅ Audit complete: audit/self_audit_example/audit_report.md
+
+# Step 4: View results
+cat audit/self_audit_example/audit_report.md
+
+# Step 5: Check LangSmith trace (if LANGSMITH_API_KEY configured)
+cat audit/self_audit_example/langsmith_trace_url.txt
 ```
 
-### Or Use Streamlit UI
+**Output Structure**:
+```
+audit/self_audit_example/
+├── audit_report.md          # Full markdown report (~15KB)
+├── audit_report.json        # Structured JSON data
+├── evidence_summary.json    # Detective findings
+└── langsmith_trace_url.txt  # Observability link
+```
+
+### Alternative: Streamlit UI Example
 
 ```bash
+# Start web interface
 streamlit run app.py
-```
 
-Then open http://localhost:8501 and select your LLM provider!
+# In browser (http://localhost:8501):
+# 1. Select LLM Provider: Groq (free)
+# 2. Enter Repo URL: https://github.com/IbnuEyni/10Acweek2
+# 3. Upload PDF: reports/interim_report.pdf
+# 4. Click "Run Audit"
+# 5. View results in real-time with progress indicators
+```
 
 ---
 
@@ -130,10 +169,53 @@ Then open http://localhost:8501 and select your LLM provider!
 
 ### 🔬 Forensic Analysis
 
-- **AST Parsing**: Detects LangGraph patterns, Pydantic models, state reducers
-- **Git Analysis**: Atomic commit verification, history analysis
-- **PDF Analysis**: Concept extraction, keyword density, cross-referencing
-- **Vision Analysis**: Diagram classification with Gemini 2.5 Flash
+### Advanced AST Analysis
+
+**Structural Property Verification**:
+- ✅ Detects `StateGraph` instantiation and compilation
+- ✅ Verifies `add_node()`, `add_edge()`, `add_conditional_edges()` usage
+- ✅ Counts nodes and edges for parallelism estimation
+- ✅ Checks for LangGraph imports and type hints
+- ✅ Analyzes function signatures, class inheritance, docstrings
+- ✅ Validates Pydantic `BaseModel` usage and `Annotated` types
+
+**Example**: Detecting conditional edges in graph.py
+```python
+# AST traversal finds:
+findings = {
+    "has_conditional_edges": True,
+    "has_compile": True,
+    "edge_count": 10,
+    "node_names": ["repo_investigator", "doc_analyst", ...]
+}
+```
+
+### Semantic PDF Chunking
+
+**Queryable Document Access**:
+- ✅ Splits large PDFs into overlapping chunks (2000 chars, 200 overlap)
+- ✅ Sentence-boundary detection for clean breaks
+- ✅ Keyword-based search with relevance scoring
+- ✅ Returns top-N most relevant chunks for targeted analysis
+- ✅ Ready for embedding-based semantic search
+
+**Example**: Querying PDF for specific concepts
+```python
+# Instead of loading entire 20-page PDF:
+chunks = query_chunks(pdf_text, "StateGraph architecture", max_chunks=3)
+# Returns only relevant sections with context
+```
+
+### Git Analysis
+- **Atomic commit verification**: Detects monolithic vs incremental commits
+- **History analysis**: Extracts commit messages, timestamps, patterns
+- **URL validation**: Regex-based GitHub URL verification
+- **Edge case handling**: Empty repos, auth failures, timeouts
+
+### Vision Analysis
+- **Diagram classification**: StateGraph vs generic flowchart detection
+- **Flow analysis**: Fan-out/fan-in pattern recognition with Gemini 2.5 Flash
+- **Node identification**: Extracts component names from diagrams
 
 ### ⚖️ Dialectical Reasoning
 
@@ -167,6 +249,53 @@ Then open http://localhost:8501 and select your LLM provider!
 | **Parallel Speedup**   | 2.5x vs sequential             |
 | **Cost (DeepSeek)**    | $0.02 per audit                |
 | **Cost (Groq)**        | $0 (free tier, 3-4 audits/day) |
+
+---
+
+## 📦 Dependency Management
+
+### Locked Dependencies
+
+**File**: `requirements.txt` (pip-freeze snapshot)
+- ✅ All dependencies pinned to exact versions
+- ✅ Includes transitive dependencies
+- ✅ Reproducible builds across environments
+- ✅ Generated from working production environment
+
+**Key Dependencies**:
+```
+langgraph==0.2.59        # StateGraph orchestration
+langchain==0.3.18        # LLM framework
+pydantic==2.10.6         # Type-safe state models
+streamlit==1.41.1        # Web UI
+groq==0.13.1             # Groq LLM provider
+google-generativeai==0.8.3  # Gemini vision
+```
+
+### Python Version
+
+**File**: `.python-version`
+```
+3.11.0
+```
+
+**Why Python 3.11+**:
+- ✅ Native `TypedDict` with `Annotated` support
+- ✅ Better error messages for type hints
+- ✅ Performance improvements (10-60% faster than 3.10)
+- ✅ `tomllib` for pyproject.toml parsing
+
+### Reproducible Setup
+
+```bash
+# Exact environment recreation
+python3.11 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# Verify installation
+python -c "import langgraph; print(langgraph.__version__)"  # 0.2.59
+```
 
 ---
 
