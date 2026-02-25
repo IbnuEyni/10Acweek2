@@ -1,34 +1,40 @@
 """
 AST tools for Python code structure analysis.
-Detects LangGraph patterns, Pydantic models, and state reducers.
+Detects LangGraph patterns, Pydantic models, state reducers, and structural properties.
 """
 import ast
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Set
 
 
 def detect_langgraph_patterns(file_path: Path) -> Dict:
     """
     Analyze Python file for LangGraph patterns using AST.
+    Enhanced with deeper structural checks.
     
     Args:
         file_path: Path to Python file
         
     Returns:
-        Dict with detected patterns
+        Dict with detected patterns and structural properties
     """
     try:
         with open(file_path) as f:
-            tree = ast.parse(f.read())
-    except (SyntaxError, FileNotFoundError):
-        return {"error": "Failed to parse file"}
+            content = f.read()
+            tree = ast.parse(content)
+    except (SyntaxError, FileNotFoundError) as e:
+        return {"error": f"Failed to parse file: {e}"}
     
     findings = {
         "has_state_graph": False,
         "has_add_node": False,
         "has_add_edge": False,
+        "has_conditional_edges": False,
+        "has_compile": False,
         "parallel_branches": 0,
-        "node_names": []
+        "node_names": [],
+        "edge_count": 0,
+        "imports_langgraph": "langgraph" in content
     }
     
     for node in ast.walk(tree):
@@ -47,11 +53,62 @@ def detect_langgraph_patterns(file_path: Path) -> Dict:
                 # Detect add_edge calls
                 elif node.func.attr == "add_edge":
                     findings["has_add_edge"] = True
+                    findings["edge_count"] += 1
+                
+                # Detect add_conditional_edges
+                elif node.func.attr == "add_conditional_edges":
+                    findings["has_conditional_edges"] = True
+                
+                # Detect compile() call
+                elif node.func.attr == "compile":
+                    findings["has_compile"] = True
     
-    # Estimate parallelism (multiple edges from same source)
+    # Estimate parallelism (unique nodes suggest parallel execution)
     findings["parallel_branches"] = len(set(findings["node_names"]))
     
     return findings
+
+
+def analyze_code_structure(file_path: Path) -> Dict:
+    """
+    Deep structural analysis: complexity, imports, function signatures.
+    
+    Args:
+        file_path: Path to Python file
+        
+    Returns:
+        Dict with structural metrics
+    """
+    try:
+        with open(file_path) as f:
+            tree = ast.parse(f.read())
+    except (SyntaxError, FileNotFoundError):
+        return {"error": "Failed to parse"}
+    
+    metrics = {
+        "function_count": 0,
+        "class_count": 0,
+        "import_count": 0,
+        "max_nesting_depth": 0,
+        "has_type_hints": False,
+        "has_docstrings": False
+    }
+    
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef):
+            metrics["function_count"] += 1
+            if node.returns or any(arg.annotation for arg in node.args.args):
+                metrics["has_type_hints"] = True
+            if ast.get_docstring(node):
+                metrics["has_docstrings"] = True
+        
+        elif isinstance(node, ast.ClassDef):
+            metrics["class_count"] += 1
+        
+        elif isinstance(node, (ast.Import, ast.ImportFrom)):
+            metrics["import_count"] += 1
+    
+    return metrics
 
 
 def find_pydantic_models(file_path: Path) -> List[str]:

@@ -1,17 +1,36 @@
 """
 Git tools for safe repository operations.
-Implements sandboxed cloning and history analysis.
+Implements sandboxed cloning, history analysis, and edge case handling.
 """
 import subprocess
 import tempfile
+import re
 from pathlib import Path
 from typing import List, Dict, Optional
 from src.utils.config import Config
 
 
+def validate_repo_url(repo_url: str) -> bool:
+    """
+    Validate GitHub repository URL format.
+    
+    Args:
+        repo_url: Repository URL to validate
+        
+    Returns:
+        True if valid, False otherwise
+    """
+    # Match github.com URLs (https or git protocol)
+    patterns = [
+        r'^https://github\.com/[\w-]+/[\w.-]+(\.git)?$',
+        r'^git@github\.com:[\w-]+/[\w.-]+(\.git)?$'
+    ]
+    return any(re.match(pattern, repo_url) for pattern in patterns)
+
+
 def safe_clone_repo(repo_url: str) -> Path:
     """
-    Clone repository to isolated temporary directory.
+    Clone repository to isolated temporary directory with edge case handling.
     
     Args:
         repo_url: GitHub repository URL
@@ -20,8 +39,12 @@ def safe_clone_repo(repo_url: str) -> Path:
         Path to cloned repository
         
     Raises:
-        ValueError: If clone fails
+        ValueError: If URL invalid, clone fails, or repo empty
     """
+    # Validate URL format
+    if not validate_repo_url(repo_url):
+        raise ValueError(f"Invalid GitHub URL format: {repo_url}")
+    
     temp_dir = tempfile.mkdtemp(prefix="audit_repo_")
     
     try:
@@ -32,22 +55,38 @@ def safe_clone_repo(repo_url: str) -> Path:
             timeout=Config.GIT_CLONE_TIMEOUT,
             check=True
         )
-        return Path(temp_dir)
+        
+        repo_path = Path(temp_dir)
+        
+        # Check if repo is empty
+        py_files = list(repo_path.rglob("*.py"))
+        if not py_files:
+            raise ValueError("Repository contains no Python files")
+        
+        return repo_path
+        
     except subprocess.TimeoutExpired:
         raise ValueError(f"Clone timeout after {Config.GIT_CLONE_TIMEOUT}s")
     except subprocess.CalledProcessError as e:
-        raise ValueError(f"Clone failed: {e.stderr}")
+        error_msg = e.stderr.lower()
+        if "not found" in error_msg or "repository not found" in error_msg:
+            raise ValueError(f"Repository not found: {repo_url}")
+        elif "authentication" in error_msg or "permission denied" in error_msg:
+            raise ValueError(f"Authentication failed (private repo?): {repo_url}")
+        else:
+            raise ValueError(f"Clone failed: {e.stderr}")
 
 
 def extract_git_history(repo_path: Path) -> List[Dict[str, str]]:
     """
     Extract commit history with messages and timestamps.
+    Handles empty repos gracefully.
     
     Args:
         repo_path: Path to cloned repository
         
     Returns:
-        List of commits with hash, message, timestamp
+        List of commits with hash, message, timestamp (empty list if no commits)
     """
     try:
         result = subprocess.run(
@@ -58,19 +97,24 @@ def extract_git_history(repo_path: Path) -> List[Dict[str, str]]:
             check=True
         )
         
+        if not result.stdout.strip():
+            return []  # Empty repo
+        
         commits = []
         for line in result.stdout.strip().split("\n"):
             if line:
-                hash_val, message, timestamp = line.split("|", 2)
-                commits.append({
-                    "hash": hash_val,
-                    "message": message,
-                    "timestamp": timestamp
-                })
+                parts = line.split("|", 2)
+                if len(parts) == 3:
+                    hash_val, message, timestamp = parts
+                    commits.append({
+                        "hash": hash_val,
+                        "message": message,
+                        "timestamp": timestamp
+                    })
         
         return commits
     except subprocess.CalledProcessError:
-        return []
+        return []  # Graceful degradation
 
 
 def count_commits(repo_path: Path) -> int:

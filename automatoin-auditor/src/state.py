@@ -12,40 +12,107 @@ except ImportError:
 
 
 class Evidence(BaseModel):
-    """Forensic evidence collected by Detective agents."""
-    goal: str = Field(description="What this evidence was meant to verify")
-    found: bool = Field(description="Whether the artifact exists")
-    content: Optional[str] = Field(default=None, description="Extracted content or code snippet")
-    location: str = Field(description="File path, commit hash, or page number")
-    rationale: str = Field(description="Detective's reasoning for confidence level")
-    confidence: float = Field(ge=0.0, le=1.0, description="Confidence score 0-1")
+    """Forensic evidence collected by Detective agents.
+    
+    All fields are validated at runtime. Confidence must be [0.0, 1.0].
+    Goal and rationale must be non-empty strings.
+    """
+    goal: str = Field(
+        min_length=1,
+        description="What this evidence was meant to verify (e.g., 'StateGraph usage')"
+    )
+    found: bool = Field(
+        description="Whether the artifact exists (True) or is missing (False)"
+    )
+    content: Optional[str] = Field(
+        default=None,
+        max_length=10000,
+        description="Extracted content or code snippet (max 10K chars for performance)"
+    )
+    location: str = Field(
+        min_length=1,
+        description="File path, commit hash, or page number (e.g., 'src/graph.py:L15')"
+    )
+    rationale: str = Field(
+        min_length=10,
+        description="Detective's reasoning for confidence level (min 10 chars for quality)"
+    )
+    confidence: float = Field(
+        ge=0.0,
+        le=1.0,
+        description="Confidence score [0.0, 1.0] where 1.0 = certain, 0.0 = uncertain"
+    )
 
 
 class JudicialOpinion(BaseModel):
-    """Opinion from a Judge persona on a specific rubric criterion."""
-    judge: Literal["Prosecutor", "Defense", "TechLead"]
-    criterion_id: str = Field(description="ID from rubric dimension")
-    score: int = Field(ge=1, le=5, description="Score 1-5 per rubric")
-    argument: str = Field(description="Detailed reasoning for the score")
-    cited_evidence: List[str] = Field(description="List of evidence locations referenced")
+    """Opinion from a Judge persona on a specific rubric criterion.
+    
+    Score must be [1, 5] per rubric scale. Argument must be substantive (min 20 chars).
+    Each opinion must cite at least one piece of evidence.
+    """
+    judge: Literal["Prosecutor", "Defense", "TechLead"] = Field(
+        description="Judge persona: Prosecutor (critical), Defense (generous), TechLead (pragmatic)"
+    )
+    criterion_id: str = Field(
+        min_length=1,
+        description="ID from rubric dimension (e.g., 'typed_state_definitions')"
+    )
+    score: int = Field(
+        ge=1,
+        le=5,
+        description="Score [1, 5] where 1=poor, 2=basic, 3=competent, 4=advanced, 5=expert"
+    )
+    argument: str = Field(
+        min_length=20,
+        description="Detailed reasoning for the score (min 20 chars for substantive feedback)"
+    )
+    cited_evidence: List[str] = Field(
+        min_items=1,
+        description="List of evidence locations referenced (must cite at least 1)"
+    )
 
 
 class RubricDimension(BaseModel):
-    """Single dimension from the rubric constitution."""
-    id: str
-    name: str
-    target_artifact: Literal["github_repo", "pdf_report"]
-    forensic_instruction: str
-    judicial_logic: Dict[str, str]
+    """Single dimension from the rubric constitution.
+    
+    Defines what detectives should look for and how judges should evaluate.
+    """
+    id: str = Field(
+        min_length=1,
+        description="Unique identifier (e.g., 'typed_state_definitions')"
+    )
+    name: str = Field(
+        min_length=1,
+        description="Human-readable name (e.g., 'Typed State Definitions')"
+    )
+    target_artifact: Literal["github_repo", "pdf_report"] = Field(
+        description="Which artifact to analyze: github_repo (code) or pdf_report (docs)"
+    )
+    forensic_instruction: str = Field(
+        min_length=10,
+        description="Instructions for detectives on what evidence to collect"
+    )
+    judicial_logic: Dict[str, str] = Field(
+        description="Scoring guidelines for judges (e.g., {'1': 'No state', '5': 'Full Pydantic'})"
+    )
 
 
 class AgentState(TypedDict):
     """
     Main state graph state with reducers for parallel execution safety.
     
-    Reducers:
-    - operator.ior: Merges dicts without overwriting (|= operator)
-    - operator.add: Concatenates lists (+ operator)
+    Reducers ensure CRDT-like behavior for concurrent writes:
+    - operator.ior: Merges dicts without overwriting (|= operator, commutative)
+    - operator.add: Concatenates lists (+ operator, order-preserving)
+    
+    Fields:
+    - repo_url: GitHub repository URL to audit
+    - pdf_path: Local path to interim report PDF
+    - rubric_dimensions: List of evaluation criteria from rubric JSON
+    - evidences: Dict mapping detective name to list of Evidence objects
+    - opinions: List of JudicialOpinion objects from all judges
+    - final_report: Markdown report from Chief Justice
+    - errors: List of error messages from failed nodes (for graceful degradation)
     """
     repo_url: str
     pdf_path: str

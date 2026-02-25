@@ -76,6 +76,8 @@ Automaton Auditor implements a **"Digital Courtroom"** architecture where autono
 
 ## 🚀 Quick Start
 
+**⚡ New to the project? See [QUICKSTART.md](QUICKSTART.md) for one-command setup!**
+
 ### Prerequisites
 
 - Python 3.11+
@@ -90,10 +92,14 @@ Automaton Auditor implements a **"Digital Courtroom"** architecture where autono
 ```bash
 # Clone repository
 git clone https://github.com/IbnuEyni/10Acweek2
-cd 10Acweek2/automaton-auditor
+cd 10Acweek2/automatoin-auditor
 
-# Install dependencies
-pip install -e .
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# Install dependencies (locked versions)
+pip install -r requirements.txt
 
 # Configure environment
 cp .env.example .env
