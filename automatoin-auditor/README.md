@@ -80,87 +80,71 @@ Automaton Auditor implements a **"Digital Courtroom"** architecture where autono
 
 ### Runtime Requirements
 
-- **Python**: 3.11.0+ (specified in `.python-version`)
+- **Python**: 3.11+ (managed by uv)
+- **Package Manager**: [uv](https://github.com/astral-sh/uv) (modern, fast, Rust-based)
 - **Git**: 2.0+
-- **Dependencies**: Locked in `requirements.txt` (pip-freeze snapshot)
+- **Dependencies**: Locked in `uv.lock` (122 packages, 712KB, fully reproducible)
 - **API Keys**: At least one LLM provider (Groq recommended for free tier)
 
-### Installation
+### Installation (Fully Reproducible)
 
 ```bash
-# Clone repository
+# Step 1: Install uv (one-time setup)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Step 2: Clone repository
 git clone https://github.com/IbnuEyni/10Acweek2
 cd 10Acweek2/automatoin-auditor
 
-# Verify Python version
-python3 --version  # Should be 3.11.0 or higher
+# Step 3: Sync dependencies (reads pyproject.toml + uv.lock)
+uv sync
+# Creates .venv/ and installs exact versions from lock file
+# 122 packages installed in ~10 seconds
 
-# Create virtual environment
-python3 -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# Install locked dependencies (reproducible builds)
-pip install -r requirements.txt
-
-# Configure environment
+# Step 4: Configure API keys
 cp .env.example .env
-# Edit .env and add your GROQ_API_KEY from https://console.groq.com/keys
+# Edit .env and add GROQ_API_KEY from https://console.groq.com/keys
 ```
 
-### Complete End-to-End Example
-
-**Scenario**: Audit this repository against its own interim report
+### Run Audit (Precise Commands)
 
 ```bash
-# Step 1: Ensure you're in the project directory
-cd /path/to/10Acweek2/automatoin-auditor
+# Activate environment
+source .venv/bin/activate  # Linux/Mac
+# OR: .venv\Scripts\activate  # Windows
 
-# Step 2: Activate virtual environment
-source venv/bin/activate
+# Run audit against target repository
+python -m src.main \
+  --repo-url https://github.com/username/target-repo \
+  --pdf-path /path/to/interim_report.pdf \
+  --output audit/results/
 
-# Step 3: Run detective graph against sample repo and PDF
+# Example: Self-audit this repository
 python -m src.main \
   --repo-url https://github.com/IbnuEyni/10Acweek2 \
   --pdf-path reports/interim_report.pdf \
-  --output audit/self_audit_example/
-
-# Expected output:
-# ✅ Cloning repository...
-# ✅ Detective Layer: RepoInvestigator found 8 StateGraph nodes
-# ✅ Detective Layer: DocAnalyst found 17 architectural keywords
-# ✅ Detective Layer: VisionInspector analyzing diagrams...
-# ✅ Judicial Layer: 3 judges evaluating 4 criteria (12 opinions)
-# ✅ Chief Justice: Synthesizing final scores...
-# ✅ Audit complete: audit/self_audit_example/audit_report.md
-
-# Step 4: View results
-cat audit/self_audit_example/audit_report.md
-
-# Step 5: Check LangSmith trace (if LANGSMITH_API_KEY configured)
-cat audit/self_audit_example/langsmith_trace_url.txt
+  --output audit/self_audit/
 ```
 
-**Output Structure**:
+### Expected Output
+
 ```
-audit/self_audit_example/
+✅ Cloning repository...
+✅ Detective Layer: RepoInvestigator found 8 StateGraph nodes
+✅ Detective Layer: DocAnalyst found 17 architectural keywords
+✅ Detective Layer: VisionInspector analyzing diagrams...
+✅ Judicial Layer: 3 judges evaluating 4 criteria (12 opinions)
+✅ Chief Justice: Synthesizing final scores...
+✅ Audit complete: audit/self_audit/audit_report.md
+```
+
+**Output Files**:
+```
+audit/self_audit/
 ├── audit_report.md          # Full markdown report (~15KB)
 ├── audit_report.json        # Structured JSON data
 ├── evidence_summary.json    # Detective findings
-└── langsmith_trace_url.txt  # Observability link
-```
-
-### Alternative: Streamlit UI Example
-
-```bash
-# Start web interface
-streamlit run app.py
-
-# In browser (http://localhost:8501):
-# 1. Select LLM Provider: Groq (free)
-# 2. Enter Repo URL: https://github.com/IbnuEyni/10Acweek2
-# 3. Upload PDF: reports/interim_report.pdf
-# 4. Click "Run Audit"
-# 5. View results in real-time with progress indicators
+└── langsmith_trace_url.txt  # Observability link (if configured)
 ```
 
 ---
@@ -254,29 +238,31 @@ chunks = query_chunks(pdf_text, "StateGraph architecture", max_chunks=3)
 
 ## 📦 Dependency Management
 
-### Locked Dependencies
+### Modern Lock File with uv
 
-**File**: `requirements.txt` (pip-freeze snapshot)
-- ✅ All dependencies pinned to exact versions
+**File**: `uv.lock` (712KB, 122 packages)
+- ✅ Generated from `pyproject.toml` using [uv](https://github.com/astral-sh/uv)
+- ✅ All dependencies pinned with SHA256 hashes
 - ✅ Includes transitive dependencies
-- ✅ Reproducible builds across environments
-- ✅ Generated from working production environment
+- ✅ Cross-platform reproducible (Linux, macOS, Windows)
+- ✅ 10x faster than pip
 
 **Key Dependencies**:
-```
-langgraph==0.2.59        # StateGraph orchestration
-langchain==0.3.18        # LLM framework
-pydantic==2.10.6         # Type-safe state models
-streamlit==1.41.1        # Web UI
-groq==0.13.1             # Groq LLM provider
-google-generativeai==0.8.3  # Gemini vision
+```toml
+[project.dependencies]
+langgraph = ">=0.2.0"        # StateGraph orchestration
+langchain = ">=0.3.0"        # LLM framework
+pydantic = ">=2.0.0"         # Type-safe state models
+streamlit = ">=1.28.0"       # Web UI
+groq = ">=0.13.0"            # Groq LLM provider
+google-generativeai = ">=0.8.0"  # Gemini vision
 ```
 
 ### Python Version
 
-**File**: `.python-version`
-```
-3.11.0
+**Specified in**: `pyproject.toml`
+```toml
+requires-python = ">=3.11.0"
 ```
 
 **Why Python 3.11+**:
@@ -288,13 +274,15 @@ google-generativeai==0.8.3  # Gemini vision
 ### Reproducible Setup
 
 ```bash
-# Exact environment recreation
-python3.11 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+# Install uv (if not already installed)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Sync exact environment from lock file
+uv sync
 
 # Verify installation
-python -c "import langgraph; print(langgraph.__version__)"  # 0.2.59
+source .venv/bin/activate
+python -c "import langgraph; print(langgraph.__version__)"
 ```
 
 ---
