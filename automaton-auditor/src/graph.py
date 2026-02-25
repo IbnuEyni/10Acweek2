@@ -8,9 +8,12 @@ Key Patterns:
 - Fan-In: Multiple nodes converge to single aggregator
 - Parallel Execution: Nodes without dependencies run concurrently
 """
+from typing import TYPE_CHECKING
 from langgraph.graph import StateGraph, END
-from langgraph.graph.graph import CompiledGraph
 from src.state import AgentState
+
+if TYPE_CHECKING:
+    from langgraph.graph import CompiledGraph
 from src.nodes.detectives import (
     repo_investigator_node,
     doc_analyst_node,
@@ -21,7 +24,7 @@ from src.nodes.judges import prosecutor_node, defense_node, tech_lead_node
 from src.nodes.justice import chief_justice_node
 
 
-def build_audit_graph() -> CompiledGraph:
+def build_audit_graph():
     """
     Build the multi-agent audit graph with parallel execution.
     
