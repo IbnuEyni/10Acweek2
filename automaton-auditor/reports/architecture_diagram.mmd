@@ -1,0 +1,43 @@
+```mermaid
+graph TB
+    Start([🚀 Start Audit]) --> FanOut1{Fan-Out}
+    
+    FanOut1 --> Repo[🔍 RepoInvestigator<br/>Git Clone + AST Analysis<br/>Sandboxed Execution]
+    FanOut1 --> Doc[📄 DocAnalyst<br/>PDF Parsing + Concepts<br/>RAG-lite Approach]
+    FanOut1 --> Vision[👁️ VisionInspector<br/>Diagram Analysis<br/>Gemini 2.5 Flash]
+    
+    Repo --> Agg[📊 Evidence Aggregator<br/>Fan-In Synchronization<br/>operator.ior Reducer]
+    Doc --> Agg
+    Vision --> Agg
+    
+    Agg --> FanOut2{Fan-Out}
+    
+    FanOut2 --> Pros[⚖️ Prosecutor<br/>Critical Lens<br/>Trust No One<br/>Groq Llama 3.3]
+    FanOut2 --> Def[🛡️ Defense<br/>Optimistic Lens<br/>Reward Effort<br/>Groq Llama 3.3]
+    FanOut2 --> Tech[🔧 Tech Lead<br/>Pragmatic Lens<br/>Does It Work?<br/>Groq Llama 3.3]
+    
+    Pros --> CJ[👨‍⚖️ Chief Justice<br/>Deterministic Synthesis<br/>Hardcoded Rules<br/>No LLM]
+    Def --> CJ
+    Tech --> CJ
+    
+    CJ --> Report([📋 Audit Report<br/>Markdown Output<br/>15,000+ chars])
+    
+    style Start fill:#e1f5e1
+    style Repo fill:#e3f2fd
+    style Doc fill:#e3f2fd
+    style Vision fill:#e3f2fd
+    style Agg fill:#fff3e0
+    style Pros fill:#ffebee
+    style Def fill:#e8f5e9
+    style Tech fill:#f3e5f5
+    style CJ fill:#fce4ec
+    style Report fill:#e1f5e1
+    
+    classDef detective fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef judge fill:#ffebee,stroke:#c62828,stroke-width:2px
+    classDef aggregator fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    
+    class Repo,Doc,Vision detective
+    class Pros,Def,Tech judge
+    class Agg aggregator
+```
