@@ -23,12 +23,14 @@ class Config:
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
     ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
     GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+    DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
     GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
     TOGETHER_API_KEY = os.getenv("TOGETHER_API_KEY")
     OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     
     # Model Configuration
-    DEFAULT_LLM_MODEL = os.getenv("DEFAULT_LLM_MODEL", "gpt-4o")
+    LLM_PROVIDER = os.getenv("LLM_PROVIDER", "groq")  # groq, deepseek, openai, anthropic
+    DEFAULT_LLM_MODEL = os.getenv("DEFAULT_LLM_MODEL", "llama-3.3-70b-versatile")
     DEFAULT_TEMPERATURE = float(os.getenv("DEFAULT_TEMPERATURE", "0.0"))
     
     # Paths
@@ -47,6 +49,7 @@ class Config:
             cls.OPENAI_API_KEY,
             cls.ANTHROPIC_API_KEY,
             cls.GROQ_API_KEY,
+            cls.DEEPSEEK_API_KEY,
             cls.GOOGLE_API_KEY,
             cls.TOGETHER_API_KEY,
             cls.OLLAMA_BASE_URL
@@ -57,7 +60,8 @@ class Config:
                 "At least one LLM provider required:\n"
                 "  - OPENAI_API_KEY\n"
                 "  - ANTHROPIC_API_KEY\n"
-                "  - GROQ_API_KEY (recommended - fast & free)\n"
+                "  - GROQ_API_KEY (fast & free)\n"
+                "  - DEEPSEEK_API_KEY (recommended - cheap & powerful)\n"
                 "  - GOOGLE_API_KEY\n"
                 "  - TOGETHER_API_KEY\n"
                 "  - OLLAMA_BASE_URL (local)"

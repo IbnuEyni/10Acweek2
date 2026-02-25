@@ -5,34 +5,7 @@ Prosecutor, Defense, TechLead - dialectical reasoning.
 from typing import Dict, List
 from src.state import AgentState, JudicialOpinion, Evidence
 from src.utils.prompts import PROSECUTOR_PROMPT, DEFENSE_PROMPT, TECH_LEAD_PROMPT
-from src.utils.config import Config
-
-
-def create_llm():
-    """Create LLM instance based on configured provider."""
-    if Config.GROQ_API_KEY:
-        from langchain_groq import ChatGroq
-        return ChatGroq(
-            model=Config.DEFAULT_LLM_MODEL,
-            temperature=Config.DEFAULT_TEMPERATURE,
-            api_key=Config.GROQ_API_KEY
-        )
-    elif Config.OPENAI_API_KEY:
-        from langchain_openai import ChatOpenAI
-        return ChatOpenAI(
-            model=Config.DEFAULT_LLM_MODEL,
-            temperature=Config.DEFAULT_TEMPERATURE,
-            api_key=Config.OPENAI_API_KEY
-        )
-    elif Config.GOOGLE_API_KEY:
-        from langchain_google_genai import ChatGoogleGenerativeAI
-        return ChatGoogleGenerativeAI(
-            model=Config.DEFAULT_LLM_MODEL,
-            temperature=Config.DEFAULT_TEMPERATURE,
-            google_api_key=Config.GOOGLE_API_KEY
-        )
-    else:
-        raise ValueError("No LLM provider configured")
+from src.utils.llm_factory import get_judge_llm
 
 
 def format_evidence_summary(evidences: Dict[str, List[Evidence]]) -> str:
@@ -126,7 +99,7 @@ def evaluate_criterion(
 
 def prosecutor_node(state: AgentState) -> AgentState:
     """Prosecutor: Critical lens evaluation."""
-    llm = create_llm()
+    llm = get_judge_llm()
     opinions = []
     
     for criterion in state["rubric_dimensions"]:
@@ -144,7 +117,7 @@ def prosecutor_node(state: AgentState) -> AgentState:
 
 def defense_node(state: AgentState) -> AgentState:
     """Defense: Optimistic lens evaluation."""
-    llm = create_llm()
+    llm = get_judge_llm()
     opinions = []
     
     for criterion in state["rubric_dimensions"]:
@@ -162,7 +135,7 @@ def defense_node(state: AgentState) -> AgentState:
 
 def tech_lead_node(state: AgentState) -> AgentState:
     """Tech Lead: Pragmatic lens evaluation."""
-    llm = create_llm()
+    llm = get_judge_llm()
     opinions = []
     
     for criterion in state["rubric_dimensions"]:
