@@ -101,7 +101,7 @@ def test_chief_justice_synthesis():
     assert "final_report" in result
     assert len(result["final_report"]) > 0
     assert "Automaton Auditor Report" in result["final_report"]
-    assert "test_criterion" in result["final_report"]
+    assert "Test Criterion" in result["final_report"]  # Title case in report
 
 
 if __name__ == "__main__":
