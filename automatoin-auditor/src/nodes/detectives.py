@@ -5,14 +5,14 @@ RepoInvestigator, DocAnalyst, VisionInspector.
 from pathlib import Path
 from typing import Dict
 from src.state import AgentState, Evidence
-from src.tools.git_tools import safe_clone_repo, extract_git_history, count_commits
+from src.tools.repo_tools import safe_clone_repo, extract_git_history, count_commits
 from src.tools.ast_tools import (
     detect_langgraph_patterns,
     find_pydantic_models,
     detect_state_reducers,
     scan_directory_for_patterns
 )
-from src.tools.pdf_tools import (
+from src.tools.doc_tools import (
     parse_pdf_simple,
     extract_concepts,
     cross_reference_claims,

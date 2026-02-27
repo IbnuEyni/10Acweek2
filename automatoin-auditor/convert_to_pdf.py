@@ -6,7 +6,7 @@ from pathlib import Path
 import re
 
 # Read markdown
-md_path = Path("reports/interim_report.md")
+md_path = Path("reports/final_report.md")
 md_content = md_path.read_text()
 
 # Fix image paths to be absolute
@@ -58,7 +58,7 @@ styled_html = f"""
 """
 
 # Generate PDF
-pdf_path = Path("reports/interim_report.pdf")
+pdf_path = Path("reports/final_report.pdf")
 HTML(string=styled_html).write_pdf(pdf_path)
 
 print(f"✅ PDF generated: {pdf_path}")
