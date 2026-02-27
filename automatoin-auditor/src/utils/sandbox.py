@@ -82,9 +82,11 @@ def run_sandboxed_command(
     if not cmd or not isinstance(cmd, list):
         raise SandboxViolation("Invalid command format")
     
-    # Prevent shell injection
-    if any(c in str(cmd) for c in [';', '|', '&', '$', '`']):
-        raise SandboxViolation("Shell metacharacters not allowed")
+    # Prevent shell injection - check each argument separately
+    dangerous_chars = [';', '|', '&', '$', '`', '\n', '\r']
+    for arg in cmd:
+        if any(c in str(arg) for c in dangerous_chars):
+            raise SandboxViolation(f"Shell metacharacters not allowed in: {arg}")
     
     try:
         result = subprocess.run(
