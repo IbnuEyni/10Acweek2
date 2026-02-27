@@ -92,12 +92,11 @@ def extract_git_history(repo_path: Path) -> List[Dict[str, str]]:
         List of commits with hash, message, timestamp (empty list if no commits)
     """
     try:
-        result = subprocess.run(
+        result = run_sandboxed_command(
             ["git", "log", "--oneline", "--reverse", "--format=%H|%s|%ai"],
-            cwd=repo_path,
-            capture_output=True,
-            text=True,
-            check=True
+            cwd=str(repo_path),
+            timeout=30,
+            apply_limits=False
         )
         
         if not result.stdout.strip():
@@ -123,12 +122,11 @@ def extract_git_history(repo_path: Path) -> List[Dict[str, str]]:
 def count_commits(repo_path: Path) -> int:
     """Count total commits in repository."""
     try:
-        result = subprocess.run(
+        result = run_sandboxed_command(
             ["git", "rev-list", "--count", "HEAD"],
-            cwd=repo_path,
-            capture_output=True,
-            text=True,
-            check=True
+            cwd=str(repo_path),
+            timeout=10,
+            apply_limits=False
         )
         return int(result.stdout.strip())
     except (subprocess.CalledProcessError, ValueError):
