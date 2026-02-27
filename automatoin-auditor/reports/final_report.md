@@ -33,6 +33,16 @@ The Automaton Auditor is an enterprise-grade multi-agent system that autonomousl
 
 ---
 
+## System Architecture
+
+### High-Level Architecture Diagram
+
+![Automaton Auditor Architecture](architecture_diagram.png)
+
+**Figure 1**: Complete system architecture showing the Digital Courtroom model with parallel execution patterns. The diagram illustrates the fan-out/fan-in orchestration across Detective Layer (3 parallel agents), Evidence Aggregator (synchronization point), Judicial Layer (3 parallel judges), and Chief Justice (deterministic synthesis). Conditional edges enable graceful error handling when evidence collection fails.
+
+---
+
 ## Theoretical Foundation
 
 ### Multi-Agent System Concepts
@@ -63,13 +73,9 @@ The Chief Justice synthesizes conflicting opinions using deterministic rules (se
 
 ## Architecture Overview
 
-### System Architecture Diagram
-
-![Automaton Auditor Architecture](architecture_diagram.png)
-
-_Figure 1: Complete system architecture showing parallel execution, fan-out/fan-in patterns, and multi-agent orchestration_
-
 ### The Digital Courtroom Model with State Flow
+
+**Figure 2**: Detailed state flow diagram showing LangGraph node orchestration, state reducers (operator.ior for evidence dicts, operator.add for opinion lists), conditional routing logic, and execution timeline. This ASCII representation maps directly to the compiled StateGraph implementation in src/graph.py.
 
 ```
 ┌─────────────────────────────────────────────────────────┐
