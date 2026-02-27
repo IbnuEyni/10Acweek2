@@ -5,11 +5,12 @@ Detects LangGraph patterns, Pydantic models, state reducers, and structural prop
 import ast
 from pathlib import Path
 from typing import Dict, List, Optional, Set
+from src.utils.sandbox import validate_file_access, SandboxViolation, ResourceLimits
 
 
 def detect_langgraph_patterns(file_path: Path) -> Dict:
     """
-    Analyze Python file for LangGraph patterns using AST.
+    Analyze Python file for LangGraph patterns using AST with sandboxing.
     Enhanced with deeper structural checks.
     
     Args:
@@ -19,9 +20,14 @@ def detect_langgraph_patterns(file_path: Path) -> Dict:
         Dict with detected patterns and structural properties
     """
     try:
+        # Validate file access with size limits
+        validate_file_access(file_path, max_size_mb=ResourceLimits.MAX_FILE_SIZE_MB)
+        
         with open(file_path) as f:
             content = f.read()
             tree = ast.parse(content)
+    except SandboxViolation as e:
+        return {"error": f"Sandbox violation: {e}"}
     except (SyntaxError, FileNotFoundError) as e:
         return {"error": f"Failed to parse file: {e}"}
     
@@ -71,7 +77,7 @@ def detect_langgraph_patterns(file_path: Path) -> Dict:
 
 def analyze_code_structure(file_path: Path) -> Dict:
     """
-    Deep structural analysis: complexity, imports, function signatures.
+    Deep structural analysis with sandboxing: complexity, imports, function signatures.
     
     Args:
         file_path: Path to Python file
@@ -80,9 +86,10 @@ def analyze_code_structure(file_path: Path) -> Dict:
         Dict with structural metrics
     """
     try:
+        validate_file_access(file_path, max_size_mb=ResourceLimits.MAX_FILE_SIZE_MB)
         with open(file_path) as f:
             tree = ast.parse(f.read())
-    except (SyntaxError, FileNotFoundError):
+    except (SandboxViolation, SyntaxError, FileNotFoundError):
         return {"error": "Failed to parse"}
     
     metrics = {

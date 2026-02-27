@@ -8,6 +8,7 @@ import re
 from pathlib import Path
 from typing import List, Dict, Optional
 from src.utils.config import Config
+from src.utils.sandbox import isolated_directory, run_sandboxed_command, SandboxViolation
 
 
 def validate_repo_url(repo_url: str) -> bool:
@@ -30,7 +31,7 @@ def validate_repo_url(repo_url: str) -> bool:
 
 def safe_clone_repo(repo_url: str) -> Path:
     """
-    Clone repository to isolated temporary directory with edge case handling.
+    Clone repository to isolated temporary directory with sandboxing.
     
     Args:
         repo_url: GitHub repository URL
@@ -48,12 +49,10 @@ def safe_clone_repo(repo_url: str) -> Path:
     temp_dir = tempfile.mkdtemp(prefix="audit_repo_")
     
     try:
-        result = subprocess.run(
+        # Use sandboxed command execution with resource limits
+        result = run_sandboxed_command(
             ["git", "clone", "--depth", "50", repo_url, temp_dir],
-            capture_output=True,
-            text=True,
-            timeout=Config.GIT_CLONE_TIMEOUT,
-            check=True
+            timeout=Config.GIT_CLONE_TIMEOUT
         )
         
         repo_path = Path(temp_dir)
@@ -65,6 +64,8 @@ def safe_clone_repo(repo_url: str) -> Path:
         
         return repo_path
         
+    except SandboxViolation as e:
+        raise ValueError(f"Sandbox violation: {str(e)}")
     except subprocess.TimeoutExpired:
         raise ValueError(f"Clone timeout after {Config.GIT_CLONE_TIMEOUT}s")
     except subprocess.CalledProcessError as e:

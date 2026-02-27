@@ -1,6 +1,32 @@
 # Security Measures
 
-## Sandboxing
+## Sandboxing Implementation
+
+### Core Sandboxing Module
+Dedicated `src/utils/sandbox.py` module provides:
+
+```python
+class ResourceLimits:
+    MAX_MEMORY_MB = 512
+    MAX_CPU_TIME_SEC = 30
+    MAX_FILE_SIZE_MB = 10
+    MAX_PROCESSES = 10
+
+def run_sandboxed_command(cmd, timeout=30):
+    """Execute with resource limits via preexec_fn."""
+    subprocess.run(
+        cmd,
+        preexec_fn=set_resource_limits,  # Apply rlimit
+        timeout=timeout,
+        shell=False
+    )
+```
+
+**Enforced Limits**:
+- Memory: 512MB max (RLIMIT_AS)
+- CPU time: 30s max (RLIMIT_CPU)
+- Processes: 10 max (RLIMIT_NPROC)
+- File size: 10MB max validation
 
 ### Git Clone Isolation
 All repository clones execute in isolated temporary directories:
@@ -22,6 +48,29 @@ def safe_clone_repo(repo_url: str) -> Path:
 - Prevents path traversal attacks
 - Isolated from main codebase
 - Concurrent audits don't conflict
+
+### File Access Validation
+All file operations validated before access:
+
+```python
+def validate_file_access(file_path: Path, max_size_mb=10):
+    """Validate file safety before access."""
+    if not file_path.exists():
+        raise SandboxViolation("File not found")
+    
+    size_mb = file_path.stat().st_size / (1024 * 1024)
+    if size_mb > max_size_mb:
+        raise SandboxViolation(f"File too large: {size_mb:.1f}MB")
+    
+    # Prevent path traversal
+    file_path.resolve().relative_to(Path.cwd())
+```
+
+**Applied To**:
+- AST parsing (detect_langgraph_patterns)
+- Code structure analysis
+- PDF processing
+- All file reads
 
 ### Subprocess Safety
 All external commands use subprocess.run() with:
