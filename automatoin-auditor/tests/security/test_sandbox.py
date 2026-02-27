@@ -66,9 +66,24 @@ class TestShellInjectionPrevention:
             run_sandboxed_command(["echo", "test; rm -rf /"], apply_limits=False)
     
     def test_blocks_pipe_injection(self):
-        """Verify pipe command chaining is blocked."""
-        with pytest.raises(SandboxViolation, match="Shell metacharacters not allowed"):
+        """Verify pipe command chaining is blocked (except git format strings)."""
+        # Pipe in regular command should be blocked
+        with pytest.raises(SandboxViolation, match="Pipe character not allowed"):
             run_sandboxed_command(["echo", "test | cat /etc/passwd"], apply_limits=False)
+    
+    def test_allows_git_format_strings(self):
+        """Verify git format strings with pipes are allowed."""
+        # This should NOT raise an exception (git format strings are safe)
+        try:
+            run_sandboxed_command(
+                ["git", "log", "--format=%H|%s|%ai", "-1"],
+                apply_limits=False,
+                timeout=5
+            )
+        except SandboxViolation as e:
+            if "Pipe character" in str(e):
+                pytest.fail("Git format strings should be allowed")
+            # Other errors (like not in a git repo) are fine
     
     def test_allows_safe_commands(self):
         """Verify safe commands execute successfully."""

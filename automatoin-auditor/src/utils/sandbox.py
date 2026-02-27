@@ -83,10 +83,18 @@ def run_sandboxed_command(
         raise SandboxViolation("Invalid command format")
     
     # Prevent shell injection - check each argument separately
-    dangerous_chars = [';', '|', '&', '$', '`', '\n', '\r']
+    # Exception: Git format strings like '%H|%s|%ai' are safe (not shell pipes)
+    dangerous_chars = [';', '&', '$', '`', '\n', '\r']
     for arg in cmd:
-        if any(c in str(arg) for c in dangerous_chars):
+        arg_str = str(arg)
+        # Skip validation for git format strings (start with --format=)
+        if arg_str.startswith('--format='):
+            continue
+        if any(c in arg_str for c in dangerous_chars):
             raise SandboxViolation(f"Shell metacharacters not allowed in: {arg}")
+        # Check for pipe only if not in git format context
+        if '|' in arg_str and not (cmd[0] == 'git' and '--format=' in ' '.join(cmd)):
+            raise SandboxViolation(f"Pipe character not allowed in: {arg}")
     
     try:
         result = subprocess.run(

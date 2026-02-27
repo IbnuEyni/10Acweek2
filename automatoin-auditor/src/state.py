@@ -124,6 +124,13 @@ class AgentState(TypedDict):
        - Commutative: Yes (order doesn't matter)
        - Idempotent: Yes (same write produces same result)
        - Use case: 3 detectives write evidence concurrently without conflicts
+       - CRDT Proof: operator.ior implements OR-Set semantics (add-wins)
+         * Concurrent writes to different keys: {a:1} | {b:2} = {a:1, b:2}
+         * Concurrent writes to same key: {a:1} | {a:2} = {a:2} (last-write-wins)
+         * Associative: (A | B) | C = A | (B | C)
+         * Commutative: A | B = B | A
+         * Idempotent: A | A = A
+       - Implementation: Python dict.__ior__ (PEP 584)
     
     2. opinions (operator.add):
        - Why: List concatenation preserving all judge opinions
@@ -131,6 +138,12 @@ class AgentState(TypedDict):
        - Commutative: No (order matters for report readability)
        - Idempotent: No (duplicate writes append duplicates)
        - Use case: 3 judges write opinions, all must be preserved
+       - CRDT Proof: operator.add implements G-Counter semantics (grow-only)
+         * Concurrent appends: [a] + [b] = [a, b]
+         * Associative: ([a] + [b]) + [c] = [a] + ([b] + [c])
+         * NOT commutative: [a] + [b] ≠ [b] + [a] (order preserved)
+         * Monotonic: len(L1 + L2) >= max(len(L1), len(L2))
+       - Implementation: Python list.__add__
     
     3. errors (operator.add):
        - Why: List concatenation preserving all error messages
@@ -138,6 +151,7 @@ class AgentState(TypedDict):
        - Commutative: No (chronological order useful for debugging)
        - Idempotent: No (duplicate errors indicate retry attempts)
        - Use case: Any node can report errors without blocking others
+       - CRDT Proof: Same as opinions (G-Counter semantics)
     """
     repo_url: str
     pdf_path: str

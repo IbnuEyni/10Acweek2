@@ -85,6 +85,21 @@ def extract_git_history(repo_path: Path) -> List[Dict[str, str]]:
     Extract commit history with messages and timestamps.
     Handles empty repos gracefully.
     
+    Security Note:
+    --------------
+    The format string '%H|%s|%ai' contains pipe characters (|) which are
+    NOT shell metacharacters in this context. This is a git-specific format
+    string passed as an argument to git log, not executed by the shell.
+    
+    Git format placeholders:
+    - %H: Full commit hash
+    - %s: Commit subject (message)
+    - %ai: Author date (ISO 8601 format)
+    - |: Delimiter (literal character, not shell pipe)
+    
+    The command is executed via subprocess.run with shell=False, ensuring
+    the format string is treated as a literal argument, not shell code.
+    
     Args:
         repo_path: Path to cloned repository
         

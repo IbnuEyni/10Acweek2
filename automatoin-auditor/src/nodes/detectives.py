@@ -218,21 +218,29 @@ def vision_inspector_node(state: AgentState) -> AgentState:
         return {"evidences": evidences}
     
     try:
+        # Check for standalone diagram files first (architecture_diagram.png)
+        diagram_dir = pdf_path.parent
+        standalone_diagrams = list(diagram_dir.glob("*diagram*.png")) + list(diagram_dir.glob("*architecture*.png"))
+        
+        # Also extract images from PDF
         image_paths = extract_images_from_pdf(pdf_path)
         
-        if not image_paths:
+        # Combine both sources
+        all_images = standalone_diagrams + image_paths
+        
+        if not all_images:
             evidences["diagram_analysis"] = [Evidence(
                 goal="Analyze architectural diagrams",
                 found=False,
-                content="No images extracted from PDF",
+                content="No images found in PDF or reports directory",
                 location=str(pdf_path),
-                rationale="PDF contains no diagrams or extraction failed",
+                rationale="PDF contains no diagrams and no standalone diagram files found",
                 confidence=0.8
             )]
             return {"evidences": evidences}
         
         diagram_findings = []
-        for img_path in image_paths[:5]:
+        for img_path in all_images[:5]:  # Analyze up to 5 diagrams
             analysis = analyze_diagram_with_gemini(img_path, Config.GOOGLE_API_KEY)
             if "error" not in analysis:
                 diagram_findings.append(analysis)
