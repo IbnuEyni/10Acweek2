@@ -110,6 +110,25 @@ def repo_investigator_node(state: AgentState) -> AgentState:
                 confidence=0.85 if reducer_info.get("has_reducers") else 0.2
             )]
         
+        # Evidence 5: Security Sandboxing
+        sandbox_files = list(repo_path.rglob("*sandbox*.py"))
+        if sandbox_files:
+            sandbox_file = sandbox_files[0]
+            with open(sandbox_file, 'r') as f:
+                content = f.read()
+            has_resource_limits = 'ResourceLimits' in content
+            has_sandboxed_command = 'run_sandboxed_command' in content
+            has_validation = 'validate_file_access' in content
+            
+            evidences["security_sandboxing"] = [Evidence(
+                goal="Verify sandboxing and security controls",
+                found=has_resource_limits and has_sandboxed_command,
+                content=f"ResourceLimits: {has_resource_limits}, run_sandboxed_command: {has_sandboxed_command}, validate_file_access: {has_validation}",
+                location=str(sandbox_file),
+                rationale="Production-grade sandboxing with resource limits and validation" if (has_resource_limits and has_sandboxed_command) else "No sandboxing",
+                confidence=0.95 if (has_resource_limits and has_sandboxed_command and has_validation) else 0.1
+            )]
+        
     except Exception as e:
         evidences["error"] = [Evidence(
             goal="Repository analysis",
