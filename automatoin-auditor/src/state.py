@@ -113,14 +113,44 @@ class AgentState(TypedDict):
     - opinions: List of JudicialOpinion objects from all judges
     - final_report: Markdown report from Chief Justice
     - errors: List of error messages from failed nodes (for graceful degradation)
+    
+    Reducer Strategy:
+    ----------------
+    Each parallel-safe field uses a specific reducer to prevent data loss:
+    
+    1. evidences (operator.ior):
+       - Why: Dict merge where each detective writes to unique key
+       - Behavior: {"repo": [...]} | {"doc": [...]} = {"repo": [...], "doc": [...]}
+       - Commutative: Yes (order doesn't matter)
+       - Idempotent: Yes (same write produces same result)
+       - Use case: 3 detectives write evidence concurrently without conflicts
+    
+    2. opinions (operator.add):
+       - Why: List concatenation preserving all judge opinions
+       - Behavior: [op1, op2] + [op3] = [op1, op2, op3]
+       - Commutative: No (order matters for report readability)
+       - Idempotent: No (duplicate writes append duplicates)
+       - Use case: 3 judges write opinions, all must be preserved
+    
+    3. errors (operator.add):
+       - Why: List concatenation preserving all error messages
+       - Behavior: ["err1"] + ["err2"] = ["err1", "err2"]
+       - Commutative: No (chronological order useful for debugging)
+       - Idempotent: No (duplicate errors indicate retry attempts)
+       - Use case: Any node can report errors without blocking others
     """
     repo_url: str
     pdf_path: str
     rubric_dimensions: List[RubricDimension]
     
     # Parallel-safe collections using reducers
+    # operator.ior: Dict merge (|=) - each detective writes to unique key
     evidences: Annotated[Dict[str, List[Evidence]], operator.ior]
+    
+    # operator.add: List concat (+) - preserve all opinions from 3 judges
     opinions: Annotated[List[JudicialOpinion], operator.add]
     
     final_report: str
+    
+    # operator.add: List concat (+) - preserve all errors for debugging
     errors: Annotated[List[str], operator.add]
