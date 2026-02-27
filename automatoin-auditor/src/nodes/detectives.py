@@ -232,13 +232,15 @@ def vision_inspector_node(state: AgentState) -> AgentState:
             return {"evidences": evidences}
         
         diagram_findings = []
-        for img_path in image_paths[:3]:
+        for img_path in image_paths[:5]:
             analysis = analyze_diagram_with_gemini(img_path, Config.GOOGLE_API_KEY)
             if "error" not in analysis:
                 diagram_findings.append(analysis)
         
-        has_state_graph = any(
-            "StateGraph" in d.get("diagram_type", "") 
+        # Check for architectural diagrams (StateGraph, flowchart, or system architecture)
+        has_architecture = any(
+            d.get("diagram_type", "") in ["StateGraph", "Flowchart", "Sequence"] or
+            any(node in str(d.get("nodes", [])) for node in ["Detective", "Judge", "node", "state"])
             for d in diagram_findings
         )
         has_parallel = any(
@@ -248,11 +250,11 @@ def vision_inspector_node(state: AgentState) -> AgentState:
         
         evidences["diagram_analysis"] = [Evidence(
             goal="Verify architectural diagram shows parallel execution",
-            found=has_state_graph and has_parallel,
-            content=f"Analyzed {len(diagram_findings)} diagrams. Findings: {diagram_findings}",
+            found=has_architecture and has_parallel,
+            content=f"Analyzed {len(diagram_findings)} diagrams. Sample: {diagram_findings[0] if diagram_findings else 'None'}",
             location=str(pdf_path),
-            rationale=f"StateGraph: {has_state_graph}, Parallel: {has_parallel}",
-            confidence=0.7 if diagram_findings else 0.1
+            rationale=f"Architecture diagram: {has_architecture}, Parallel execution: {has_parallel}",
+            confidence=0.85 if (has_architecture and has_parallel) else 0.3
         )]
         
     except Exception as e:
