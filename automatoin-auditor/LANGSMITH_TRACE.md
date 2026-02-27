@@ -15,7 +15,7 @@
 ## What You'll See
 
 - **Timeline View**: Complete execution flow from start to finish
-- **LLM Calls**: All 4 LLM interactions (1 Gemini + 3 Groq)
+- **LLM Calls**: All 4 LLM interactions (1 Gemini + 3 DeepSeek)
 - **Parallel Execution**: Visual representation of fan-out/fan-in
 - **Performance**: Token counts, latency, execution time
 - **Debugging**: Inputs/outputs for each node
