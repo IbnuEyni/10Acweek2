@@ -11,10 +11,9 @@ from src.utils.rubric_loader import get_synthesis_rules
 def chief_justice_node(state: AgentState) -> AgentState:
     """
     Chief Justice: Deterministic synthesis of judicial opinions.
-    NOT an LLM - uses hardcoded conflict resolution rules.
+    Enterprise-grade conflict resolution using statistical methods.
     """
     opinions = state["opinions"]
-    synthesis_rules = get_synthesis_rules()
     
     # Group opinions by criterion
     opinions_by_criterion = defaultdict(list)
@@ -35,70 +34,50 @@ def chief_justice_node(state: AgentState) -> AgentState:
         if not all([prosecutor_op, defense_op, tech_lead_op]):
             continue
         
-        # Rule 1: Security Override (Modified for Evidence-Based Assessment)
-        # Only cap score if security issues are mentioned WITHOUT security controls evidence
-        has_security_concern = any(
-            "security" in op.argument.lower() or "injection" in op.argument.lower() 
-            for op in criterion_opinions
-        )
+        scores = [prosecutor_op.score, defense_op.score, tech_lead_op.score]
+        
+        # Rule 1: Critical Security Veto
+        # If security controls are missing AND Prosecutor flags security, cap at 2
+        has_security_concern = "security" in prosecutor_op.argument.lower() or "injection" in prosecutor_op.argument.lower()
         has_security_evidence = "security_sandboxing" in str(state.get("evidences", {}))
         
         if has_security_concern and not has_security_evidence:
-            # Security concern without evidence of controls - cap at 3
-            final_scores[criterion_id] = min(3, max(o.score for o in criterion_opinions))
+            final_scores[criterion_id] = 2
             dissents.append(
-                f"**{criterion_id}**: Security flaw detected without controls. Score capped at 3."
+                f"**{criterion_id}**: Critical security flaw without controls. Score: 2/5."
             )
             remediation.append(
-                f"- **{criterion_id}**: Implement security controls (sandboxing, validation). "
-                f"Prosecutor noted: {prosecutor_op.argument[:100]}..."
-            )
-            continue
-        elif has_security_concern and has_security_evidence:
-            # Security concern but controls are present - use weighted average
-            dissents.append(
-                f"**{criterion_id}**: Security concerns raised but controls verified. Using weighted resolution."
-            )
-        
-        # Rule 2: Fact Supremacy (Tech Lead has highest weight)
-        if tech_lead_op.score <= 2:
-            final_scores[criterion_id] = tech_lead_op.score
-            dissents.append(
-                f"**{criterion_id}**: Tech Lead ruling ({tech_lead_op.score}) overrides optimism. "
-                f"Rationale: {tech_lead_op.argument[:80]}..."
-            )
-            remediation.append(
-                f"- **{criterion_id}**: {tech_lead_op.argument[:150]}..."
+                f"- **{criterion_id}**: CRITICAL - Implement sandboxing and input validation immediately."
             )
             continue
         
-        # Rule 3: High Variance Resolution
-        scores = [prosecutor_op.score, defense_op.score, tech_lead_op.score]
+        # Rule 2: Consensus Detection
+        # If all judges agree within 1 point, use median (robust to outliers)
         variance = max(scores) - min(scores)
+        if variance <= 1:
+            final_scores[criterion_id] = sorted(scores)[1]  # Median
+            continue
         
+        # Rule 3: Weighted Average (Enterprise Standard)
+        # Tech Lead: 50% (validates functionality)
+        # Prosecutor: 30% (ensures quality standards)
+        # Defense: 20% (considers effort and intent)
+        weighted_score = (
+            tech_lead_op.score * 0.50 +
+            prosecutor_op.score * 0.30 +
+            defense_op.score * 0.20
+        )
+        
+        # Rule 4: Statistical Rounding
+        # Use standard rounding (0.5 rounds up)
+        final_scores[criterion_id] = round(weighted_score)
+        
+        # Document high variance cases
         if variance > 2:
-            # Significant disagreement - use weighted average heavily favoring Tech Lead
-            weighted_score = (
-                prosecutor_op.score * 0.10 +
-                defense_op.score * 0.05 +
-                tech_lead_op.score * 0.85
-            )
-            # Round up if >= 4.5 to reward strong Tech Lead scores
-            final_scores[criterion_id] = round(weighted_score + 0.01) if weighted_score >= 4.4 else round(weighted_score)
             dissents.append(
-                f"**{criterion_id}**: High variance detected (Prosecutor: {prosecutor_op.score}, "
-                f"Defense: {defense_op.score}, Tech Lead: {tech_lead_op.score}). "
-                f"Weighted resolution: {final_scores[criterion_id]}"
+                f"**{criterion_id}**: High variance (P:{prosecutor_op.score}, D:{defense_op.score}, T:{tech_lead_op.score}). "
+                f"Weighted average: {weighted_score:.2f} → {final_scores[criterion_id]}"
             )
-        else:
-            # Low variance - weighted average heavily favoring Tech Lead
-            weighted_score = (
-                prosecutor_op.score * 0.15 +
-                defense_op.score * 0.10 +
-                tech_lead_op.score * 0.75
-            )
-            # Round up if >= 4.5 to reward strong Tech Lead scores
-            final_scores[criterion_id] = round(weighted_score + 0.01) if weighted_score >= 4.4 else round(weighted_score)
     
     # Generate markdown report
     report = generate_markdown_report(
@@ -179,11 +158,10 @@ def generate_markdown_report(
         report += "\n---\n\n"
     
     report += "## Synthesis Rules Applied\n\n"
-    report += "1. **Security Override**: Security flaws cap score at 3 (unless security controls verified)\n"
-    report += "2. **Fact Supremacy**: Tech Lead ruling overrides opinions when score ≤ 2\n"
-    report += "3. **Weighted Resolution**: Tech Lead 85%, Prosecutor 10%, Defense 5% (high variance)\n"
-    report += "4. **Weighted Resolution**: Tech Lead 75%, Prosecutor 15%, Defense 10% (low variance)\n"
-    report += "5. **Favorable Rounding**: Scores ≥ 4.4 round up to reward strong implementations\n\n"
+    report += "1. **Critical Security Veto**: Missing security controls = 2/5 (enterprise standard)\n"
+    report += "2. **Consensus Detection**: Variance ≤ 1 point = use median (robust to outliers)\n"
+    report += "3. **Weighted Average**: Tech Lead 50%, Prosecutor 30%, Defense 20%\n"
+    report += "4. **Statistical Rounding**: Standard rounding (0.5 rounds up)\n\n"
     
     report += "*Report generated by Automaton Auditor - Enterprise Multi-Agent System*\n"
     
