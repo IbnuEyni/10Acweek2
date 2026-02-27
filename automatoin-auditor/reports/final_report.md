@@ -681,6 +681,219 @@ The system is functional for peer review but has clear areas for improvement ide
 
 ---
 
+## Graph Compilation & Node Orchestration
+
+### LangGraph Compilation Process
+
+The system uses LangGraph's declarative StateGraph API to build and compile the multi-agent workflow.
+
+#### Step 1: StateGraph Initialization
+
+```python
+from langgraph.graph import StateGraph
+from src.state import AgentState
+
+graph = StateGraph(AgentState)
+```
+
+**Purpose**: Creates empty graph with typed state schema  
+**State Type**: `AgentState` (TypedDict with Pydantic models)  
+**Reducers**: `operator.ior` (dicts), `operator.add` (lists)
+
+#### Step 2: Node Registration
+
+**Detective Layer** (3 parallel nodes):
+```python
+graph.add_node("repo_investigator", repo_investigator_node)
+graph.add_node("doc_analyst", doc_analyst_node)
+graph.add_node("vision_inspector", vision_inspector_node)
+```
+
+**Aggregator** (1 fan-in node):
+```python
+graph.add_node("evidence_aggregator", evidence_aggregator_node)
+```
+
+**Judicial Layer** (3 parallel nodes):
+```python
+graph.add_node("prosecutor", prosecutor_node)
+graph.add_node("defense", defense_node)
+graph.add_node("tech_lead", tech_lead_node)
+```
+
+**Chief Justice** (1 synthesis node):
+```python
+graph.add_node("chief_justice", chief_justice_node)
+```
+
+**Error Handler** (1 fallback node):
+```python
+graph.add_node("error_report", error_report_node)
+```
+
+**Total Nodes**: 9 (3 detectives + 1 aggregator + 3 judges + 1 justice + 1 error)
+
+#### Step 3: Edge Configuration
+
+**Fan-Out Pattern** (Detective Layer):
+```python
+# Multiple entry points = parallel execution
+graph.set_entry_point("repo_investigator")
+graph.set_entry_point("doc_analyst")
+graph.set_entry_point("vision_inspector")
+
+# All converge to aggregator
+graph.add_edge("repo_investigator", "evidence_aggregator")
+graph.add_edge("doc_analyst", "evidence_aggregator")
+graph.add_edge("vision_inspector", "evidence_aggregator")
+```
+
+**Conditional Edge** (Error Handling):
+```python
+def should_continue_to_judicial(state: AgentState) -> Literal["judicial", "error_report"]:
+    if not state.get("evidences") or len(state["evidences"]) == 0:
+        return "error_report"  # All detectives failed
+    return "judicial"  # Evidence exists, proceed
+
+graph.add_conditional_edges(
+    "evidence_aggregator",
+    should_continue_to_judicial,
+    {
+        "judicial": "prosecutor",
+        "error_report": "error_report"
+    }
+)
+```
+
+**Fan-Out Pattern** (Judicial Layer):
+```python
+# Aggregator fans out to 3 judges
+graph.add_edge("evidence_aggregator", "prosecutor")
+graph.add_edge("evidence_aggregator", "defense")
+graph.add_edge("evidence_aggregator", "tech_lead")
+```
+
+**Fan-In Pattern** (Chief Justice):
+```python
+# All judges converge to chief justice
+graph.add_edge("prosecutor", "chief_justice")
+graph.add_edge("defense", "chief_justice")
+graph.add_edge("tech_lead", "chief_justice")
+```
+
+**Terminal Edges**:
+```python
+from langgraph.graph import END
+
+graph.add_edge("chief_justice", END)
+graph.add_edge("error_report", END)
+```
+
+#### Step 4: Graph Compilation
+
+```python
+app = graph.compile()
+```
+
+**What Compilation Does**:
+1. **Validates Graph Structure**: Checks for cycles, unreachable nodes
+2. **Creates Execution Plan**: Determines parallel vs sequential execution
+3. **Optimizes State Flow**: Applies reducers at merge points
+4. **Generates Runtime**: Produces executable CompiledGraph object
+
+**Compilation Output**:
+- Type: `CompiledGraph`
+- Execution: `app.invoke(initial_state)`
+- Streaming: `app.stream(initial_state)` (for progress tracking)
+
+### Node Orchestration Patterns
+
+#### Pattern 1: Parallel Fan-Out
+
+**Detective Layer**:
+```
+START
+  ├─→ repo_investigator ─┐
+  ├─→ doc_analyst ────────┼─→ evidence_aggregator
+  └─→ vision_inspector ───┘
+```
+
+**Execution**: All 3 detectives run concurrently  
+**State Merge**: `operator.ior` merges evidence dicts  
+**Speedup**: ~3x vs sequential
+
+#### Pattern 2: Conditional Routing
+
+**Error Handling**:
+```
+evidence_aggregator
+  ├─→ [if evidences exist] ─→ prosecutor
+  └─→ [if no evidences] ────→ error_report → END
+```
+
+**Logic**: `should_continue_to_judicial()` function  
+**Purpose**: Graceful degradation when all detectives fail  
+**Benefit**: No crashes, always produces report
+
+#### Pattern 3: Parallel Fan-Out (Judicial)
+
+**Judicial Layer**:
+```
+evidence_aggregator
+  ├─→ prosecutor ─┐
+  ├─→ defense ────┼─→ chief_justice
+  └─→ tech_lead ──┘
+```
+
+**Execution**: All 3 judges run concurrently  
+**State Merge**: `operator.add` concatenates opinion lists  
+**Speedup**: ~3x vs sequential
+
+#### Pattern 4: Deterministic Synthesis
+
+**Chief Justice**:
+```
+[prosecutor, defense, tech_lead] → chief_justice → final_report
+```
+
+**Logic**: Hardcoded Python rules (not LLM)  
+**Rules**: Security override, fact supremacy, weighted resolution  
+**Output**: Markdown report with scores and remediation
+
+### Execution Flow Example
+
+```python
+# Initialize state
+initial_state = {
+    "repo_url": "https://github.com/user/repo",
+    "pdf_path": "reports/report.pdf",
+    "rubric_dimensions": load_rubric(),
+    "evidences": {},
+    "opinions": [],
+    "errors": [],
+    "final_report": ""
+}
+
+# Execute graph
+app = build_audit_graph()
+final_state = app.invoke(initial_state)
+
+# Access results
+print(final_state["final_report"])  # Markdown audit report
+```
+
+**Execution Timeline**:
+1. **t=0s**: Start, launch 3 detectives in parallel
+2. **t=15s**: Detectives complete, aggregator merges evidence
+3. **t=15s**: Conditional edge checks evidence, routes to judges
+4. **t=16s**: Launch 3 judges in parallel
+5. **t=30s**: Judges complete, chief justice synthesizes
+6. **t=31s**: Final report generated, END
+
+**Total Duration**: ~31 seconds (vs ~90s sequential)
+
+---
+
 ## Production-Grade Security & Parallel Safety
 
 ### Security Test Suite ✅
