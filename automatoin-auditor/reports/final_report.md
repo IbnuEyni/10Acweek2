@@ -904,7 +904,8 @@ print(final_state["final_report"])  # Markdown audit report
 
 ### Security Test Suite ✅
 
-**Implementation**: `tests/security/test_sandbox.py` (11 tests, 100% passing)
+**Implementation**: `tests/security/test_sandbox.py` (11 tests, 100% passing)  
+**Code Coverage**: ALL subprocess calls sandboxed (0 raw os.system/subprocess.run)
 
 #### Test Coverage
 
