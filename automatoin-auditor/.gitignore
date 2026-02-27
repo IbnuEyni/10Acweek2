@@ -20,6 +20,7 @@ __pycache__/
 # Temp directories for cloned repos
 /tmp_*
 /audit_*
+reports/extracted_images/
 
 # Build artifacts
 dist/

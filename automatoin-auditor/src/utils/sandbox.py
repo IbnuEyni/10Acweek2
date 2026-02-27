@@ -19,25 +19,25 @@ class SandboxViolation(Exception):
 
 class ResourceLimits:
     """Resource limits for sandboxed operations."""
-    MAX_MEMORY_MB = 512
-    MAX_CPU_TIME_SEC = 30
+    MAX_MEMORY_MB = 1024  # Increased for git operations
+    MAX_CPU_TIME_SEC = 60
     MAX_FILE_SIZE_MB = 10
-    MAX_PROCESSES = 10
+    MAX_PROCESSES = 100  # Git needs multiple processes
 
 
 def set_resource_limits():
     """Apply resource limits to current process (Unix only)."""
     try:
-        # Memory limit
+        # Memory limit (soft limit only to allow some flexibility)
         memory_bytes = ResourceLimits.MAX_MEMORY_MB * 1024 * 1024
-        resource.setrlimit(resource.RLIMIT_AS, (memory_bytes, memory_bytes))
+        resource.setrlimit(resource.RLIMIT_AS, (memory_bytes, memory_bytes * 2))
         
         # CPU time limit
-        resource.setrlimit(resource.RLIMIT_CPU, (ResourceLimits.MAX_CPU_TIME_SEC, ResourceLimits.MAX_CPU_TIME_SEC))
+        resource.setrlimit(resource.RLIMIT_CPU, (ResourceLimits.MAX_CPU_TIME_SEC, ResourceLimits.MAX_CPU_TIME_SEC + 30))
         
-        # Process limit
-        resource.setrlimit(resource.RLIMIT_NPROC, (ResourceLimits.MAX_PROCESSES, ResourceLimits.MAX_PROCESSES))
-    except (ValueError, OSError):
+        # Process limit (generous for git)
+        resource.setrlimit(resource.RLIMIT_NPROC, (ResourceLimits.MAX_PROCESSES, ResourceLimits.MAX_PROCESSES + 50))
+    except (ValueError, OSError, AttributeError):
         pass  # Windows or insufficient permissions
 
 
@@ -58,7 +58,8 @@ def run_sandboxed_command(
     cmd: list[str],
     cwd: Optional[Path] = None,
     timeout: int = 30,
-    env: Optional[Dict[str, str]] = None
+    env: Optional[Dict[str, str]] = None,
+    apply_limits: bool = True
 ) -> subprocess.CompletedProcess:
     """
     Execute command in sandboxed environment with resource limits.
@@ -68,6 +69,7 @@ def run_sandboxed_command(
         cwd: Working directory
         timeout: Timeout in seconds
         env: Environment variables
+        apply_limits: Whether to apply resource limits (disable for git)
         
     Returns:
         CompletedProcess result
@@ -94,7 +96,7 @@ def run_sandboxed_command(
             check=True,
             env=env,
             shell=False,  # Critical: no shell
-            preexec_fn=set_resource_limits  # Apply limits
+            preexec_fn=set_resource_limits if apply_limits else None
         )
         return result
     except subprocess.CalledProcessError as e:
@@ -125,8 +127,7 @@ def validate_file_access(file_path: Path, max_size_mb: int = 10) -> None:
     if size_mb > max_size_mb:
         raise SandboxViolation(f"File too large: {size_mb:.1f}MB > {max_size_mb}MB")
     
-    # Check path traversal
-    try:
-        file_path.resolve().relative_to(Path.cwd())
-    except ValueError:
+    # Check path traversal (allow /tmp for cloned repos)
+    resolved = file_path.resolve()
+    if not (str(resolved).startswith(str(Path.cwd())) or str(resolved).startswith('/tmp')):
         raise SandboxViolation("Path traversal detected")

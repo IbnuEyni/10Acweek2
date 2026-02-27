@@ -49,10 +49,12 @@ def safe_clone_repo(repo_url: str) -> Path:
     temp_dir = tempfile.mkdtemp(prefix="audit_repo_")
     
     try:
-        # Use sandboxed command execution with resource limits
+        # Use sandboxed command execution without resource limits for git
+        # (git needs to fork multiple processes)
         result = run_sandboxed_command(
             ["git", "clone", "--depth", "50", repo_url, temp_dir],
-            timeout=Config.GIT_CLONE_TIMEOUT
+            timeout=Config.GIT_CLONE_TIMEOUT,
+            apply_limits=False  # Git needs process forking
         )
         
         repo_path = Path(temp_dir)
