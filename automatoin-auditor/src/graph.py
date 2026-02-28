@@ -143,6 +143,7 @@ def build_audit_graph():
     # CRITICAL: All three judges execute in PARALLEL, not sequentially
     # The aggregator has edges to all 3 judges, enabling concurrent execution
     # This is TRUE parallel fan-out: aggregator → [prosecutor || defense || tech_lead]
+    graph.add_edge("evidence_aggregator", "prosecutor")
     graph.add_edge("evidence_aggregator", "defense")
     graph.add_edge("evidence_aggregator", "tech_lead")
     
