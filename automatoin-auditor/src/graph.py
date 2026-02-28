@@ -140,10 +140,8 @@ def build_audit_graph():
     )
     
     # Wire Judicial Layer (Parallel Fan-Out from Aggregator)
-    # CRITICAL: All three judges execute in PARALLEL, not sequentially
-    # The aggregator has edges to all 3 judges, enabling concurrent execution
-    # This is TRUE parallel fan-out: aggregator → [prosecutor || defense || tech_lead]
-    graph.add_edge("evidence_aggregator", "prosecutor")
+    # Defense and TechLead also receive evidence in parallel with Prosecutor
+    # Conditional edge routes to prosecutor, these edges complete the parallel fan-out
     graph.add_edge("evidence_aggregator", "defense")
     graph.add_edge("evidence_aggregator", "tech_lead")
     

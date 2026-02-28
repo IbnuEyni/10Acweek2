@@ -149,6 +149,14 @@ if st.button("🚀 Run Audit", type="primary", use_container_width=True):
             progress_bar.progress(100)
             status_text.text("✅ Audit complete!")
             
+            # Save report to disk
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            output_dir = Path("audit/streamlit_runs")
+            output_dir.mkdir(parents=True, exist_ok=True)
+            report_path = output_dir / f"audit_report_{timestamp}.md"
+            report_path.write_text(result["final_report"])
+            st.info(f"📁 Report saved to: {report_path}")
+            
             # Display results
             st.markdown("---")
             st.success("🎉 Audit completed successfully!")
