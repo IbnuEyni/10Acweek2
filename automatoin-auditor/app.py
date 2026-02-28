@@ -31,8 +31,8 @@ with st.sidebar:
     st.markdown("### LLM Provider")
     provider = st.selectbox(
         "Choose Provider",
-        ["groq", "deepseek", "openai", "anthropic"],
-        index=0,  # Default to Groq (free and working)
+        ["deepseek", "groq", "openai", "anthropic"],
+        index=0,  # Default to DeepSeek (cheap and unlimited)
         help="Select which LLM provider to use for judge evaluations"
     )
     
