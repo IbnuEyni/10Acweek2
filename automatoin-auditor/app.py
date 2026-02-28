@@ -95,9 +95,15 @@ with col1:
     st.header("📦 Repository Input")
     repo_url = st.text_input(
         "GitHub Repository URL",
+        value="https://github.com/IbnuEyni/10Acweek2",  # Pre-fill with your repo
         placeholder="https://github.com/username/repository",
-        help="Enter the GitHub repository URL to audit"
+        help="Enter the GitHub repository URL to audit (without .git suffix)"
     )
+    
+    # Normalize URL (remove .git suffix if present)
+    if repo_url and repo_url.endswith('.git'):
+        repo_url = repo_url[:-4]
+        st.info(f"ℹ️ Normalized URL to: {repo_url}")
 
 with col2:
     st.header("📄 Report (Optional)")
