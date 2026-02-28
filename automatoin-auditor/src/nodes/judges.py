@@ -89,7 +89,7 @@ def evaluate_criterion(
             criterion_id=criterion.id,
             score=3,
             argument=f"Error during evaluation: {str(e)}",
-            cited_evidence=[]
+            cited_evidence=["FALLBACK_EVIDENCE"]  # Pydantic requires min 1 item
         )
 
 
