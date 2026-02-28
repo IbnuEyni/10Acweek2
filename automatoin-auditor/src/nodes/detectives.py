@@ -84,8 +84,11 @@ def repo_investigator_node(state: AgentState) -> AgentState:
             with open(graph_file, 'r') as f:
                 graph_content = f.read()
             
-            # Detect fan-out patterns (multiple set_entry_point or edges from same source)
-            fan_out_detective = graph_content.count('set_entry_point') >= 3
+            # Detect fan-out patterns
+            # Old pattern: multiple set_entry_point calls
+            # New pattern: multiple edges from START
+            fan_out_detective = graph_content.count('set_entry_point') >= 3 or \
+                               (graph_content.count('add_edge(START,') >= 3 or graph_content.count('add_edge(START, ') >= 3)
             fan_out_judicial = 'add_edge("evidence_aggregator", "prosecutor")' in graph_content and \
                               'add_edge("evidence_aggregator", "defense")' in graph_content and \
                               'add_edge("evidence_aggregator", "tech_lead")' in graph_content
