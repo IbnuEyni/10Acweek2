@@ -1,15 +1,18 @@
+# Audit outputs (exclude from submission)
+audit/
+
 # Environment
 .env
-.venv/
-venv/
-env/
-
-# Python
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
+*.pyc
+*.pyo
+*.pyd
 .Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
 
 # IDE
 .vscode/
@@ -17,29 +20,15 @@ __pycache__/
 *.swp
 *.swo
 
-# Temp directories for cloned repos
-/tmp_*
-/audit_*
-reports/extracted_images/
-
-# Build artifacts
-dist/
-build/
-*.egg-info/
-
-# Test artifacts
-.pytest_cache/
-.coverage
-htmlcov/
+# Logs
+*.log
+langsmith_logs/
 
 # Large files
-temp_report.pdf
-reports/interim_report.pdf
-uv.lock
+*.pdf
+*.png
+*.jpg
+*.jpeg
 
-# Audit outputs (keep structure, ignore content)
-audit/report_bypeer_received/*
-audit/report_onpeer_generated/*
-audit/report_onself_generated/*
-audit/langsmith_logs/*
-!audit/**/.gitkeep
+# Lock files (optional, but reduces size)
+uv.lock
