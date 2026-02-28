@@ -32,6 +32,11 @@ build/
 .coverage
 htmlcov/
 
+# Large files
+temp_report.pdf
+reports/interim_report.pdf
+uv.lock
+
 # Audit outputs (keep structure, ignore content)
 audit/report_bypeer_received/*
 audit/report_onpeer_generated/*
