@@ -689,6 +689,8 @@ The system is functional for peer review but has clear areas for improvement ide
 
 ## Graph Compilation & Node Orchestration
 
+**See [docs/ADR.md](../docs/ADR.md) for detailed architecture decision records.**
+
 ### LangGraph Compilation Process
 
 The system uses LangGraph's declarative StateGraph API to build and compile the multi-agent workflow.
