@@ -85,15 +85,18 @@ class RubricDimension(BaseModel):
         min_length=1,
         description="Human-readable name (e.g., 'Typed State Definitions')"
     )
-    target_artifact: Literal["github_repo", "pdf_report"] = Field(
-        description="Which artifact to analyze: github_repo (code) or pdf_report (docs)"
+    target_artifact: Literal["github_repo", "pdf_report", "pdf_images"] = Field(
+        description="Which artifact to analyze: github_repo (code), pdf_report (docs), or pdf_images (diagrams)"
     )
     forensic_instruction: str = Field(
         min_length=10,
         description="Instructions for detectives on what evidence to collect"
     )
-    judicial_logic: Dict[str, str] = Field(
-        description="Scoring guidelines for judges (e.g., {'1': 'No state', '5': 'Full Pydantic'})"
+    success_pattern: str = Field(
+        description="Pattern indicating successful implementation"
+    )
+    failure_pattern: str = Field(
+        description="Pattern indicating failed or missing implementation"
     )
 
 

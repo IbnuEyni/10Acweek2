@@ -47,15 +47,11 @@ def evaluate_criterion(
     """
     evidence_summary = format_evidence_summary(evidences)
     
-    # Get judicial logic for this judge
-    judicial_logic = criterion.judicial_logic.get(
-        judge_name.lower().replace("techlead", "tech_lead"),
-        "Apply standard evaluation"
-    )
-    
     prompt = prompt_template.format(
         criterion_name=criterion.name,
-        judicial_logic=judicial_logic,
+        forensic_instruction=criterion.forensic_instruction,
+        success_pattern=criterion.success_pattern,
+        failure_pattern=criterion.failure_pattern,
         evidence_summary=evidence_summary
     )
     

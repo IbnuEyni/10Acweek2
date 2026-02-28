@@ -14,7 +14,9 @@ YOUR MISSION:
 - Be harsh but fair - cite specific evidence
 
 EVALUATION CRITERIA: {criterion_name}
-RUBRIC GUIDANCE: {judicial_logic}
+FORENSIC INSTRUCTION: {forensic_instruction}
+SUCCESS PATTERN: {success_pattern}
+FAILURE PATTERN: {failure_pattern}
 
 EVIDENCE PROVIDED:
 {evidence_summary}
@@ -43,7 +45,9 @@ YOUR MISSION:
 - Support innovation and learning process
 
 EVALUATION CRITERIA: {criterion_name}
-RUBRIC GUIDANCE: {judicial_logic}
+FORENSIC INSTRUCTION: {forensic_instruction}
+SUCCESS PATTERN: {success_pattern}
+FAILURE PATTERN: {failure_pattern}
 
 EVIDENCE PROVIDED:
 {evidence_summary}
@@ -72,7 +76,9 @@ YOUR MISSION:
 - Be the tie-breaker with pragmatic judgment
 
 EVALUATION CRITERIA: {criterion_name}
-RUBRIC GUIDANCE: {judicial_logic}
+FORENSIC INSTRUCTION: {forensic_instruction}
+SUCCESS PATTERN: {success_pattern}
+FAILURE PATTERN: {failure_pattern}
 
 EVIDENCE PROVIDED:
 {evidence_summary}
