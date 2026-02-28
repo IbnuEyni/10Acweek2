@@ -29,12 +29,14 @@ def validate_repo_url(repo_url: str) -> bool:
     return any(re.match(pattern, repo_url) for pattern in patterns)
 
 
-def safe_clone_repo(repo_url: str) -> Path:
+def safe_clone_repo(repo_url: str, max_retries: int = 2) -> Path:
     """
     Clone repository to isolated temporary directory with sandboxing.
+    Includes retry logic for network issues.
     
     Args:
         repo_url: GitHub repository URL
+        max_retries: Number of retry attempts for network failures
         
     Returns:
         Path to cloned repository
@@ -46,38 +48,63 @@ def safe_clone_repo(repo_url: str) -> Path:
     if not validate_repo_url(repo_url):
         raise ValueError(f"Invalid GitHub URL format: {repo_url}")
     
-    temp_dir = tempfile.mkdtemp(prefix="audit_repo_")
+    last_error = None
     
-    try:
-        # Use sandboxed command execution without resource limits for git
-        # (git needs to fork multiple processes)
-        result = run_sandboxed_command(
-            ["git", "clone", "--depth", "50", repo_url, temp_dir],
-            timeout=Config.GIT_CLONE_TIMEOUT,
-            apply_limits=False  # Git needs process forking
-        )
+    for attempt in range(max_retries + 1):
+        temp_dir = tempfile.mkdtemp(prefix="audit_repo_")
         
-        repo_path = Path(temp_dir)
-        
-        # Check if repo is empty
-        py_files = list(repo_path.rglob("*.py"))
-        if not py_files:
-            raise ValueError("Repository contains no Python files")
-        
-        return repo_path
-        
-    except SandboxViolation as e:
-        raise ValueError(f"Sandbox violation: {str(e)}")
-    except subprocess.TimeoutExpired:
-        raise ValueError(f"Clone timeout after {Config.GIT_CLONE_TIMEOUT}s")
-    except subprocess.CalledProcessError as e:
-        error_msg = e.stderr.lower()
+        try:
+            # Use sandboxed command execution without resource limits for git
+            # (git needs to fork multiple processes)
+            result = run_sandboxed_command(
+                ["git", "clone", "--depth", "50", repo_url, temp_dir],
+                timeout=120,  # Increased timeout for Streamlit
+                apply_limits=False  # Git needs process forking
+            )
+            
+            repo_path = Path(temp_dir)
+            
+            # Check if repo is empty
+            py_files = list(repo_path.rglob("*.py"))
+            if not py_files:
+                raise ValueError("Repository contains no Python files")
+            
+            return repo_path
+            
+        except (SandboxViolation, subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
+            last_error = e
+            # Clean up failed attempt
+            try:
+                import shutil
+                shutil.rmtree(temp_dir, ignore_errors=True)
+            except:
+                pass
+            
+            # Don't retry on authentication or not found errors
+            if isinstance(e, subprocess.CalledProcessError):
+                error_msg = str(e).lower()
+                if "not found" in error_msg or "authentication" in error_msg:
+                    break
+            
+            # Retry on network/timeout errors
+            if attempt < max_retries:
+                continue
+    
+    # All retries failed
+    if isinstance(last_error, SandboxViolation):
+        raise ValueError(f"Sandbox violation: {str(last_error)}")
+    elif isinstance(last_error, subprocess.TimeoutExpired):
+        raise ValueError(f"Clone timeout after 120s (tried {max_retries + 1} times)")
+    elif isinstance(last_error, subprocess.CalledProcessError):
+        error_msg = getattr(last_error, 'stderr', str(last_error)).lower()
         if "not found" in error_msg or "repository not found" in error_msg:
             raise ValueError(f"Repository not found: {repo_url}")
         elif "authentication" in error_msg or "permission denied" in error_msg:
             raise ValueError(f"Authentication failed (private repo?): {repo_url}")
         else:
-            raise ValueError(f"Clone failed: {e.stderr}")
+            raise ValueError(f"Clone failed after {max_retries + 1} attempts: {last_error}")
+    else:
+        raise ValueError(f"Clone failed: {last_error}")
 
 
 def extract_git_history(repo_path: Path) -> List[Dict[str, str]]:
