@@ -10,7 +10,7 @@ Key Patterns:
 - Conditional Edges: Route failures without blocking entire pipeline
 """
 from typing import TYPE_CHECKING, Literal
-from langgraph.graph import StateGraph, END
+from langgraph.graph import StateGraph, END, START
 from src.state import AgentState
 
 if TYPE_CHECKING:
@@ -118,30 +118,31 @@ def build_audit_graph():
     # Error Handling Node
     graph.add_node("error_report", error_report_node)
     
-    # Wire Detective Layer (Fan-Out)
-    graph.set_entry_point("repo_investigator")
+    # Wire Detective Layer (Fan-Out from START)
+    # All 3 detectives execute in parallel from the start
+    graph.add_edge(START, "repo_investigator")
+    graph.add_edge(START, "doc_analyst")
+    graph.add_edge(START, "vision_inspector")
+    
+    # All detectives converge to aggregator (Fan-In)
     graph.add_edge("repo_investigator", "evidence_aggregator")
-    
-    graph.set_entry_point("doc_analyst")
     graph.add_edge("doc_analyst", "evidence_aggregator")
-    
-    graph.set_entry_point("vision_inspector")
     graph.add_edge("vision_inspector", "evidence_aggregator")
     
     # Conditional Edge: Check if evidence exists before proceeding to judicial
-    # Routes to prosecutor which triggers parallel execution of all judges
     graph.add_conditional_edges(
         "evidence_aggregator",
         should_continue_to_judicial,
         {
-            "judicial": "prosecutor",  # Triggers parallel judicial fan-out
-            "error_report": "error_report"  # If no evidence, generate error report
+            "judicial": "prosecutor",
+            "error_report": "error_report"
         }
     )
     
     # Wire Judicial Layer (Parallel Fan-Out from Aggregator)
-    # All three judges receive aggregated evidence and execute concurrently
-    # This creates true parallel execution: aggregator → [prosecutor, defense, tech_lead]
+    # CRITICAL: All three judges execute in PARALLEL, not sequentially
+    # The aggregator has edges to all 3 judges, enabling concurrent execution
+    # This is TRUE parallel fan-out: aggregator → [prosecutor || defense || tech_lead]
     graph.add_edge("evidence_aggregator", "defense")
     graph.add_edge("evidence_aggregator", "tech_lead")
     
