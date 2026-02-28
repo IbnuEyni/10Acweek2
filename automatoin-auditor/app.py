@@ -32,12 +32,26 @@ with st.sidebar:
     provider = st.selectbox(
         "Choose Provider",
         ["groq", "deepseek", "openai", "anthropic"],
-        index=0,
+        index=0,  # Default to Groq (free and working)
         help="Select which LLM provider to use for judge evaluations"
     )
     
-    # Update config based on selection
+    # Update config based on selection (override .env)
     Config.LLM_PROVIDER = provider
+    
+    # Validate API key for selected provider
+    api_key_valid = False
+    if provider == "groq" and Config.GROQ_API_KEY:
+        api_key_valid = True
+    elif provider == "deepseek" and Config.DEEPSEEK_API_KEY:
+        api_key_valid = True
+    elif provider == "openai" and Config.OPENAI_API_KEY:
+        api_key_valid = True
+    elif provider == "anthropic" and Config.ANTHROPIC_API_KEY:
+        api_key_valid = True
+    
+    if not api_key_valid:
+        st.error(f"❌ {provider.upper()} API key not configured! Please add to .env file.")
     
     # Show provider info
     provider_info = {
