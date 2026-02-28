@@ -80,12 +80,13 @@ def build_audit_graph():
     Architecture:
         Detective Layer (Parallel) → Aggregator (Fan-In) → 
         [Conditional: Evidence Check] → 
-        Judicial Layer (Parallel) → Chief Justice → Report
+        Judicial Layer (Parallel) → Chief Justice (Fan-In) → Report
         OR → Error Report (if no evidence)
     
     Parallel Execution:
         - Detective layer: 3 nodes run concurrently (repo, doc, vision)
         - Judicial layer: 3 nodes run concurrently (prosecutor, defense, tech_lead)
+        - Both layers use fan-out from single source for true parallelism
         - State reducers (operator.ior, operator.add) ensure thread-safe merging
     
     Error Handling:
@@ -128,17 +129,19 @@ def build_audit_graph():
     graph.add_edge("vision_inspector", "evidence_aggregator")
     
     # Conditional Edge: Check if evidence exists before proceeding to judicial
+    # Routes to prosecutor which triggers parallel execution of all judges
     graph.add_conditional_edges(
         "evidence_aggregator",
         should_continue_to_judicial,
         {
-            "judicial": "prosecutor",  # If evidence exists, proceed to judges
+            "judicial": "prosecutor",  # Triggers parallel judicial fan-out
             "error_report": "error_report"  # If no evidence, generate error report
         }
     )
     
-    # Wire Judicial Layer (Fan-Out from Aggregator)
-    # Note: These edges only execute if conditional edge routes to "judicial"
+    # Wire Judicial Layer (Parallel Fan-Out from Aggregator)
+    # All three judges receive aggregated evidence and execute concurrently
+    # This creates true parallel execution: aggregator → [prosecutor, defense, tech_lead]
     graph.add_edge("evidence_aggregator", "defense")
     graph.add_edge("evidence_aggregator", "tech_lead")
     
