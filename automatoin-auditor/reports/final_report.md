@@ -95,9 +95,23 @@ The Automaton Auditor is an enterprise-grade multi-agent system implementing a "
 
 ### 🎨 High-Level Architecture Diagram
 
-![Automaton Auditor Architecture](architecture_diagram.png)
+See `reports/architecture_diagram_text.md` for detailed ASCII diagram.
 
-**Figure 1**: Complete system architecture showing the Digital Courtroom model with parallel execution patterns. The diagram illustrates the fan-out/fan-in orchestration across Detective Layer (3 parallel agents), Evidence Aggregator (synchronization point), Judicial Layer (3 parallel judges), and Chief Justice (deterministic synthesis).
+**System Overview**: The Automaton Auditor implements a Digital Courtroom architecture with two distinct parallel execution patterns:
+
+1. **Detective Layer (Fan-Out/Fan-In)**:
+   - START → [RepoInvestigator || DocAnalyst || VisionInspector] → EvidenceAggregator
+   - 3 parallel agents collect evidence concurrently
+   - Synchronized via operator.ior reducer (dict merge)
+
+2. **Judicial Layer (Fan-Out/Fan-In)**:
+   - EvidenceAggregator → [Prosecutor || Defense || TechLead] → ChiefJustice
+   - 3 parallel judges evaluate evidence concurrently
+   - Synthesized via weighted averaging (TechLead 50%, Prosecutor 30%, Defense 20%)
+
+**Performance**: 2.5x speedup vs sequential execution (42s vs 105s)
+
+**Error Handling**: Conditional edge routes to ErrorReport if all detectives fail
 
 ---
 
@@ -322,7 +336,7 @@ Auditing **my peer's repository** (https://github.com/ermiyas111/automaton-audit
 
 1. **Report Accuracy - 1/5** (ALL 3 JUDGES SCORED 1/5)
    - **Finding**: "Multiple hallucinated file paths detected"
-   - **Prosecutor**: "Severe failure in report accuracy. Files include `src/tools/git_tools.py`, `pytesttests/security/test_sandbox.py`, `reports/report.pdf`"
+   - **Prosecutor**: "Severe failure in report accuracy. Files include `src/tools/repo_tools.py`, `tests/security/test_sandbox.py`, `reports/final_report.pdf`"
    - **Defense**: "Multiple hallucinated file paths significantly undermine trustworthiness"
    - **TechLead**: "Explicit hallucinated files indicate significant failure in cross-referencing"
    - **Root Cause**: My report referenced old file names from early development

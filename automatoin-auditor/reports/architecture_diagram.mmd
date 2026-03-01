@@ -1,43 +1,86 @@
 ```mermaid
 graph TB
-    Start([Start Audit]) --> FanOut1{Fan-Out}
+    START([START])
     
-    FanOut1 --> Repo[ RepoInvestigator<br/>Git Clone + AST Analysis<br/>Sandboxed Execution]
-    FanOut1 --> Doc[ DocAnalyst<br/>PDF Parsing + Concepts<br/>RAG-lite Approach]
-    FanOut1 --> Vision[ VisionInspector<br/>Diagram Analysis<br/>Gemini 2.5 Flash]
+    subgraph Detective_Layer[Detective Layer - Parallel Fan-Out]
+        D1[RepoInvestigator<br/>Git History + AST]
+        D2[DocAnalyst<br/>PDF Parsing]
+        D3[VisionInspector<br/>Diagram Analysis]
+    end
     
-    Repo --> Agg[Evidence Aggregator<br/>Fan-In Synchronization<br/>operator.ior Reducer]
-    Doc --> Agg
-    Vision --> Agg
+    AGG[EvidenceAggregator<br/>Fan-In Synchronization]
     
-    Agg --> FanOut2{Fan-Out}
+    subgraph Judicial_Layer[Judicial Layer - Parallel Fan-Out]
+        J1[Prosecutor<br/>Critical Lens]
+        J2[Defense<br/>Optimistic Lens]
+        J3[TechLead<br/>Pragmatic Lens]
+    end
     
-    FanOut2 --> Pros[ Prosecutor<br/>Critical Lens<br/>Trust No One<br/>Groq Llama 3.3]
-    FanOut2 --> Def[ Defense<br/>Optimistic Lens<br/>Reward Effort<br/>Groq Llama 3.3]
-    FanOut2 --> Tech[ Tech Lead<br/>Pragmatic Lens<br/>Does It Work?<br/>Groq Llama 3.3]
+    CJ[ChiefJustice<br/>Deterministic Synthesis]
+    END([END])
+    ERROR[ErrorReport<br/>Graceful Degradation]
     
-    Pros --> CJ[ Chief Justice<br/>Deterministic Synthesis<br/>Hardcoded Rules<br/>No LLM]
-    Def --> CJ
-    Tech --> CJ
+    START -->|Parallel| D1
+    START -->|Parallel| D2
+    START -->|Parallel| D3
     
-    CJ --> Report([ Audit Report<br/>Markdown Output<br/>15,000+ chars])
+    D1 -->|Evidence| AGG
+    D2 -->|Evidence| AGG
+    D3 -->|Evidence| AGG
     
-    style Start fill:#e1f5e1
-    style Repo fill:#e3f2fd
-    style Doc fill:#e3f2fd
-    style Vision fill:#e3f2fd
-    style Agg fill:#fff3e0
-    style Pros fill:#ffebee
-    style Def fill:#e8f5e9
-    style Tech fill:#f3e5f5
-    style CJ fill:#fce4ec
-    style Report fill:#e1f5e1
+    AGG -->|Check Evidence| COND{Evidence<br/>Exists?}
+    COND -->|Yes| J1
+    COND -->|Yes| J2
+    COND -->|Yes| J3
+    COND -->|No| ERROR
     
-    classDef detective fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
-    classDef judge fill:#ffebee,stroke:#c62828,stroke-width:2px
-    classDef aggregator fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    J1 -->|Opinion| CJ
+    J2 -->|Opinion| CJ
+    J3 -->|Opinion| CJ
     
-    class Repo,Doc,Vision detective
-    class Pros,Def,Tech judge
-    class Agg aggregator
+    CJ --> END
+    ERROR --> END
+    
+    style START fill:#4CAF50
+    style END fill:#F44336
+    style AGG fill:#2196F3
+    style CJ fill:#FF9800
+    style ERROR fill:#9E9E9E
+    style Detective_Layer fill:#E3F2FD
+    style Judicial_Layer fill:#FFF3E0
 ```
+
+## Architecture Explanation
+
+### Parallel Execution Patterns:
+
+1. **Detective Fan-Out (3 → 1)**
+   - START → [RepoInvestigator || DocAnalyst || VisionInspector]
+   - All 3 detectives execute concurrently
+   - Each collects independent evidence
+
+2. **Detective Fan-In (3 → 1)**
+   - [3 Detectives] → EvidenceAggregator
+   - Synchronization point using operator.ior reducer
+   - Merges evidence from all detectives
+
+3. **Judicial Fan-Out (1 → 3)**
+   - EvidenceAggregator → [Prosecutor || Defense || TechLead]
+   - All 3 judges evaluate same evidence concurrently
+   - Each applies distinct evaluation lens
+
+4. **Judicial Fan-In (3 → 1)**
+   - [3 Judges] → ChiefJustice
+   - Synchronization point using operator.add reducer
+   - Synthesizes opinions using weighted averaging
+
+### State Reducers:
+
+- **operator.ior**: Dict merge for evidences (commutative)
+- **operator.add**: List concat for opinions (order-preserving)
+
+### Error Handling:
+
+- Conditional edge checks evidence availability
+- Routes to ErrorReport if all detectives fail
+- Graceful degradation instead of crashes
