@@ -35,7 +35,7 @@ class Config:
     
     # Paths
     PROJECT_ROOT = Path(__file__).parent.parent.parent
-    RUBRIC_PATH = PROJECT_ROOT / "rubric" / "week2_rubric.json"
+    RUBRIC_PATH = PROJECT_ROOT / "rubric" / "auditor_rubric.json"
     AUDIT_OUTPUT_DIR = PROJECT_ROOT / "audit"
     
     # Safety

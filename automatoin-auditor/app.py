@@ -1,5 +1,5 @@
 """
-Streamlit Web UI for Automaton Auditor.
+Streamlit Web UI for Automation Auditor.
 Simple interface for running code audits via web browser.
 """
 import streamlit as st
@@ -13,13 +13,13 @@ from src.utils.config import Config
 
 
 st.set_page_config(
-    page_title="Automaton Auditor",
+    page_title="Automation Auditor",
     page_icon="🤖",
     layout="wide"
 )
 
 # Header
-st.title("🤖 Automaton Auditor")
+st.title("🤖 Automation Auditor")
 st.markdown("**Enterprise Multi-Agent Code Review System**")
 st.markdown("---")
 
@@ -276,7 +276,7 @@ if st.button("🚀 Run Audit", type="primary", use_container_width=True):
 st.markdown("---")
 st.markdown("""
 <div style='text-align: center; color: gray;'>
-    <p>Automaton Auditor v1.0 | Enterprise Multi-Agent Code Review System</p>
+    <p>Automation Auditor v1.0 | Enterprise Multi-Agent Code Review System</p>
     <p>Powered by LangGraph, Groq Llama 3.3, and Gemini 2.5 Flash</p>
 </div>
 """, unsafe_allow_html=True)

@@ -1,6 +1,7 @@
 # Audit outputs (exclude from submission)
 audit/
-
+convert_to_pdf.py
+convert_to_pdf_enhanced.py
 # Environment
 .env
 __pycache__/
