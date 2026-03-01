@@ -390,7 +390,7 @@ Each rubric criterion is evaluated by three judges with distinct philosophies:
 | Component           | Files                      | Lines | Status      |
 | ------------------- | -------------------------- | ----- | ----------- |
 | State Management    | src/state.py               | 60    | ✅ Complete |
-| Git Tools           | src/tools/git_tools.py     | 85    | ✅ Complete |
+| Git Tools           | src/tools/repo_tools.py    | 85    | ✅ Complete |
 | AST Tools           | src/tools/ast_tools.py     | 120   | ✅ Complete |
 | PDF Tools           | src/tools/pdf_tools.py     | 110   | ✅ Complete |
 | Vision Tools        | src/tools/vision_tools.py  | 115   | ✅ Complete |
